@@ -1,49 +1,62 @@
 import React, { useEffect, useState } from 'react';
+// import { Carousel } from '../carousel/carousel.component';
+import Carousel from '../carousel/carousel.component';
 
-const MovieList = () => {
+const MovieList = ({ searchTerm, searchType }) => {
     const [movies, setMovies] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
 
     useEffect(() => {
-        // Fetch data from your backend
-        fetch('http://localhost:3001/api/movies')
-            .then((response) => {
+        const fetchMovies = async () => {
+            setLoading(true);
+            try {
+                let url = 'http://localhost:3001/api/movies';
+                
+                if (searchTerm) {
+                    if (searchType === 'actor') {
+                        url = `http://localhost:3001/api/recommendations/actor/${encodeURIComponent(searchTerm)}`;
+                    } else if (searchType === 'genre') {
+                        url = `http://localhost:3001/api/recommendations/genre/${encodeURIComponent(searchTerm)}`;
+                    }
+                }
+
+                const response = await fetch(url);
                 if (!response.ok) {
                     throw new Error(`HTTP error! Status: ${response.status}`);
                 }
-                return response.json();
-            })
-            .then((data) => {
-                setMovies(data);
-                setLoading(false);
-            })
-            .catch((err) => {
+                const data = await response.json();
+          
+                let movieArray;
+                if (data.movies) {
+                   
+                    movieArray = data.movies;
+                } else if (Array.isArray(data)) {
+                    movieArray = data;
+                } else {
+                    movieArray = [];
+                }
+
+                console.log('Processed movies:', movieArray);
+                setMovies(movieArray);
+                setError(null);
+            } catch (err) {
+                console.error('Fetch error:', err);
                 setError(err.message);
+                setMovies([]);
+            } finally {
                 setLoading(false);
-            });
-    }, []);
+            }
+        };
 
-    if (loading) return <p>Loading movies...</p>;
-    if (error) return <p>Error: {error}</p>;
+        fetchMovies();
+    }, [searchTerm, searchType]);
 
-    return (
-        <div>
-            <h1>Movies</h1>
-            <ul>
-                {movies.map((movie) => (
-                    <li key={movie.id}>
-                        <h2>{movie.title}</h2>
-                        <p>Genre: {movie.genre}</p>
-                        <p>Release Year: {movie.year}</p>
-                        <p>Extract: {movie.extract}</p>
-                        {/* <img>Poster : src ={movie.thumbnail}</img> */}
-                        <img src={movie.thumbnail} alt={`${movie.title} Poster`} />
-                    </li>
-                ))}
-            </ul>
-        </div>
-    );
-}
+    if (loading) return <div className="min-h-screen flex items-center justify-center"><p>Thinking....</p></div>;
+    if (error) return <div className="min-h-screen flex items-center justify-center"><p>Error: {error}</p></div>;
+    if (!movies || movies.length === 0) return <div className="min-h-screen flex items-center justify-center"><p>No movies found.</p></div>;
 
-export default MovieList
+    return <Carousel items={movies} />;
+};
+
+export default MovieList;
