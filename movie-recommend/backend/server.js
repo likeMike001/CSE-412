@@ -1,6 +1,9 @@
 const express = require('express');
 const cors = require('cors');
 const pool = require('./db');
+const { spawn } = require('child_process');
+const path = require('path')
+
 
 const app = express();
 
@@ -72,6 +75,124 @@ app.get('/api/movies', async (req, res) => {
     }
 });
 
+
+app.get('/api/recommendations/:title', async (req, res) => {
+    try {
+        const { title } = req.params;
+        const { limit = 7, type = 'general' } = req.query; // Add type parameter
+
+        const python = spawn('python', [
+            path.join(__dirname, 'recommender_service', 'recommend.py'),
+            title,
+            limit,
+            type  // Pass the recommendation type to Python script
+        ]);
+
+        let recommendations = '';
+
+        python.stdout.on('data', (data) => {
+            recommendations += data.toString();
+        });
+
+        python.stderr.on('data', (data) => {
+            console.error(`Error: ${data}`);
+        });
+
+        python.on('close', (code) => {
+            if (code !== 0) {
+                return res.status(500).json({ error: 'Failed to get recommendations' });
+            }
+            try {
+                const results = JSON.parse(recommendations);
+                res.json(results);
+            } catch (error) {
+                res.status(500).json({ error: 'Failed to parse recommendations' });
+            }
+        });
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
+// actor end point 
+app.get('/api/recommendations/actor/:name', async (req, res) => {
+    try {
+        const { name } = req.params;
+        const { limit = 7 } = req.query;
+
+        const python = spawn('python', [
+            path.join(__dirname, 'recommender_service', 'recommend.py'),  // Corrected path
+            name,
+            limit.toString(),  
+            'actor'
+        ]);
+
+        let recommendations = '';
+
+        python.stdout.on('data', (data) => {
+            recommendations += data.toString();
+        });
+
+        python.stderr.on('data', (data) => {
+            console.error(`Error: ${data}`);
+        });
+
+        python.on('close', (code) => {
+            try {
+                const results = JSON.parse(recommendations);
+                if (results.error) {
+                    return res.status(404).json(results);
+                }
+                res.json(results);
+            } catch (error) {
+                res.status(500).json({ error: 'Failed to parse recommendations' });
+            }
+        });
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
+// genre end point 
+app.get('/api/recommendations/genre/:genre', async (req, res) => {
+    try {
+        const { genre } = req.params;
+        const { limit = 7 } = req.query;
+
+        const python = spawn('python', [
+            path.join(__dirname, 'recommender_service', 'recommend.py'),
+            genre,
+            limit.toString(),
+            'genre'
+        ]);
+
+        let recommendations = '';
+
+        python.stdout.on('data', (data) => {
+            recommendations += data.toString();
+        });
+
+        python.stderr.on('data', (data) => {
+            console.error(`Error: ${data}`);
+        });
+
+        python.on('close', (code) => {
+            try {
+                const results = JSON.parse(recommendations);
+                if (results.error) {
+                    return res.status(404).json(results);
+                }
+                res.json(results);
+            } catch (error) {
+                res.status(500).json({ error: 'Failed to parse genre recommendations' });
+            }
+        });
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
+
 const PORT = process.env.PORT || 3001;
 app.listen(PORT, () => {
     console.log(`Server running on port ${PORT}`);
@@ -90,3 +211,5 @@ app.post('/api/movies', async (req, res) => {
         res.status(500).json({ error: err.message });
     }
 });
+
+// AmericanPsycho
