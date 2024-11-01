@@ -1,14 +1,12 @@
-import logo from './logo.svg';
-import './App.css';
-// import searchbar_component from './components/searchbar/Searchbar_component';
-import SearchBar from './components/searchbar/searchbar.component';
+import React from "react";
+import MovieList from "./components/movielist/movie.list.component";
+
 function App() {
-  return (
+  return(
     <div>
-      <h1>Hello World</h1>
-      <SearchBar/>
+      <MovieList />
     </div>
-  );
+  )
 }
 
 export default App;
