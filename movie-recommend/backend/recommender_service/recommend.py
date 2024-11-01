@@ -1,4 +1,3 @@
-# recommend.py
 import sys
 import json
 import pickle
@@ -49,6 +48,7 @@ def get_recommendations(title, n_recommendations=5, rec_type='general'):
             'year': int(movie['year']),
             'genres': movie['genres'],
             'actors': movie['actors'],
+            'thumbnail':movie['thumbnail'],
             'similarity_score': float(score)
         })
     
@@ -59,7 +59,6 @@ def get_actor_recommendations(actor_name, n_recommendations=5):
     _, _, movies_df = load_model_components()
     
     try:
-        # Find all movies with this actor
         movies_with_actor = movies_df[movies_df['actors'].apply(lambda x: actor_name in x if isinstance(x, list) else False)]
         
         if movies_with_actor.empty:
@@ -67,7 +66,7 @@ def get_actor_recommendations(actor_name, n_recommendations=5):
         
         return {
             'actor': actor_name,
-            'movies': movies_with_actor[['title', 'year', 'genres', 'actors']]
+            'movies': movies_with_actor[['title', 'year', 'genres', 'actors','thumbnail']]
             .head(int(n_recommendations))
             .to_dict('records')
         }
@@ -87,7 +86,7 @@ def get_genre_recommendations(genre, n_recommendations=5):
         
         return {
             'genre': genre,
-            'movies': movies_with_genre[['title', 'year', 'genres', 'actors']]
+            'movies': movies_with_genre[['title', 'year', 'genres', 'actors','thumbnail']]
             .head(n_recommendations)
             .to_dict('records')
         }

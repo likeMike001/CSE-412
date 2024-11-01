@@ -36,6 +36,7 @@ app.get('/api/movies', async (req, res) => {
                 cast_member
             ON 
                movie.title = cast_member.c_title
+            LIMIT 10
         `);
 
         // Group the genres for each movie title
@@ -79,7 +80,7 @@ app.get('/api/movies', async (req, res) => {
 app.get('/api/recommendations/:title', async (req, res) => {
     try {
         const { title } = req.params;
-        const { limit = 7, type = 'general' } = req.query; // Add type parameter
+        const { limit = 7, type = 'general' } = req.query; 
 
         const python = spawn('python', [
             path.join(__dirname, 'recommender_service', 'recommend.py'),
