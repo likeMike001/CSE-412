@@ -276,5 +276,54 @@ app.post('/api/users/:userId/favorites', async(req,res) => {
     }
 });
 
+// Remove movie from favourites
+app.delete('/api/users/:userId/favorites/:movieTitle', async (req, res) => {
+    try {
+        const { userId, movieTitle } = req.params;
+        
+        // getting the curr favorites 
+        const userResult = await pool.query(
+            'SELECT favourites FROM USERS WHERE user_id = $1',
+            [userId]
+        );
+        
+        if (userResult.rows.length === 0) {
+            return res.status(404).json({ error: "User not found" });
+        }
+        
+         // parsing and updating the favorites 
+        let favorites = JSON.parse(userResult.rows[0].favourites || '[]');
+        favorites = favorites.filter(title => title !== movieTitle);
+        
+        // updating the db 
+        const updateResult = await pool.query(
+            'UPDATE USERS SET favourites = $1 WHERE user_id = $2 RETURNING *',
+            [JSON.stringify(favorites), userId]
+        );
+        
+        res.json(updateResult.rows[0]);
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
+// Get users  favorites
+app.get('/api/users/:userId/favorites', async (req, res) => {
+    try {
+        const { userId } = req.params;
+        const result = await pool.query('SELECT favourites FROM USERS WHERE user_id = $1', [userId]);
+        
+        if (result.rows.length === 0) {
+            return res.status(404).json({ error: "User not found" });
+        }
+        
+        const favorites = JSON.parse(result.rows[0].favourites || '[]');
+        res.json({ favorites });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
+
 
 // AmericanPsycho
