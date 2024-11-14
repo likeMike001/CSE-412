@@ -66,7 +66,7 @@ def get_actor_recommendations(actor_name, n_recommendations=5):
         
         return {
             'actor': actor_name,
-            'movies': movies_with_actor[['title', 'year', 'genres', 'actors','thumbnail']]
+            'movies': movies_with_actor[['title', 'year', 'genres', 'actors','thumbnail','extract']]
             .head(int(n_recommendations))
             .to_dict('records')
         }
@@ -86,7 +86,7 @@ def get_genre_recommendations(genre, n_recommendations=5):
         
         return {
             'genre': genre,
-            'movies': movies_with_genre[['title', 'year', 'genres', 'actors','thumbnail']]
+            'movies': movies_with_genre[['title', 'year', 'genres', 'actors','thumbnail','extract']]
             .head(n_recommendations)
             .to_dict('records')
         }

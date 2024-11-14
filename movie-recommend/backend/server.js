@@ -36,7 +36,7 @@ app.get('/api/movies', async (req, res) => {
                 cast_member
             ON 
                movie.title = cast_member.c_title
-            LIMIT 10
+            LIMIT 20
         `);
 
         // Group the genres for each movie title
@@ -212,5 +212,69 @@ app.post('/api/movies', async (req, res) => {
         res.status(500).json({ error: err.message });
     }
 });
+
+
+// user registration 
+
+app.post('/api/auth/register', async(req,res) =>{
+    try{
+        const {first_name , last_name} = req.body;
+        const newUser = await pool.query('INSERT INTO USERS (first_name,last_name,favourites) VALUES ($1,$2,$3) RETURNING *',
+            [first_name , last_name , '[]']
+        );
+        res.join(newUser.rows[0]);
+    }catch(err){
+        res.status(500).json({error : err.message});
+    }
+});
+
+// user - profiles 
+
+app.post('/api/users/:userId', async(req,res) => {
+    try{
+        const {userId} = req.params;
+        const user = await pool.query('SELECT * FROM USERS WHERE user_id = $1',[userId]);
+
+        if(user.rows.length === 0){
+            return res.status(404).json({error : "User not found :("});
+        }
+        res.json(user.rows[0]);
+    }catch(err){
+        res.status(500).json({error : err.message});
+    }
+})
+
+
+// adding movies to favourites 
+
+app.post('/api/users/:userId/favorites', async(req,res) => {
+    try{
+        const {userId} = req.params;
+        const {movieTitle} = req.body;
+
+        const userResult = await pool.query('SELECT favourites FROM USERS WHERE user_id = $1' , [userId]);
+
+        if(userResult.rows.length === 0){
+            return res.status(404).json({error : "user not found :("});
+        }
+
+        let favorites = JSON.parse(userResult.rows[0].favorites || '[]');
+        if (!favorites.includes(movieTitle)) {
+            favorites.push(movieTitle);
+          
+            // updating favorites in the db 
+            const updateResult = await pool.query(
+                'UPDATE USERS SET favourites = $1 WHERE user_id = $2 RETURNING *',
+                [JSON.stringify(favorites), userId]
+            );
+            res.json(updateResult.rows[0]);
+        } else {
+            res.json({ message: "Movie already in favorites" });
+        }
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
 
 // AmericanPsycho
