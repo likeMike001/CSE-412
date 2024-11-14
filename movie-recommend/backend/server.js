@@ -216,14 +216,15 @@ app.post('/api/movies', async (req, res) => {
 
 // user registration 
 
-app.post('/api/auth/register', async(req,res) =>{
+app.post('/api/auth/register', async(req,res) =>{ 
     try{
         const {first_name , last_name} = req.body;
-        const newUser = await pool.query('INSERT INTO USERS (first_name,last_name,favourites) VALUES ($1,$2,$3) RETURNING *',
+        const newUser = await pool.query(
+            'INSERT INTO USERS (first_name,last_name,favourites) VALUES ($1,$2,$3) RETURNING *',
             [first_name , last_name , '[]']
         );
-        res.join(newUser.rows[0]);
-    }catch(err){
+        res.json(newUser.rows[0]); 
+    } catch(err){
         res.status(500).json({error : err.message});
     }
 });
