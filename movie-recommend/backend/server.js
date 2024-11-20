@@ -6,7 +6,10 @@ const path = require('path');
 const { error } = require('console');
 
 
+
 const app = express();
+const multer = require('multer');
+
 
 // Middleware
 app.use(cors());
@@ -250,9 +253,10 @@ app.post('/api/auth/register', async (req, res) => {
             [username, first_name, last_name, email, password, '[]']
         );
 
-        res.join(newUser.rows[0])
+        res.json(newUser.rows[0])
 
     } catch (err) {
+        console.error("Some wrong in the registration api - server.js");
         res.status(500).json({ error: err.message });
     }
 });
@@ -274,8 +278,9 @@ app.post('/api/auth/login', async (req, res) => {
             return res.status(401).json({ error: "Invalid username or password" });
         }
 
-        res.join(user.rows[0]);
+        res.json(user.rows[0]);
     } catch (err) {
+        console.log("The error is coming from login - server js");
         res.status(500).json({ error: err.message });
     }
 });
@@ -334,6 +339,44 @@ app.post('/api/users/:userId/favorites', async (req, res) => {
         res.status(500).json({ error: err.message });
     }
 });
+
+
+// set up for file upload (image or avatar in our case lol)
+
+const storage = multer.diskStorage({
+    destination: './uploads/avatars',
+    filename: (req, file, cb) => {
+        cb(null, `user-${req.params.userId}-${Date.now()}${path.extname(file.originalname)}`);
+    }
+});
+
+
+const upload = multer({ storage });
+
+app.post('/api/users/:userId/avatar', upload.single('avatar'), async (req, res) => {
+    try {
+        const { userId } = req.params;
+        const avatarUrl = `/uploads/avatars/${req.file.filename}`;
+
+        const result = await pool.query(
+            'UPDATE users SET avatar_url = $1 WHERE user_id = $2 RETURNING *',
+            [avatarUrl, userId]
+        );
+
+        if (result.rows.length === 0) {
+            return res.status(404).json({ error: "User not found" });
+        }
+
+        res.json({ avatar_url: avatarUrl });
+    }
+    catch (err) {
+        console.log("error form avatar api - server.js");
+        res.status(500).json({error:err.message});
+    }
+});
+
+app.use('/uploads',express.static('uploads'));
+
 
 // Remove movie from favourites
 app.delete('/api/users/:userId/favorites/:movieTitle', async (req, res) => {
