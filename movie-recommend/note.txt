@@ -1,0 +1,3 @@
+11/19/24 --> Making changes to the user table to store information about the users. 
+
+
