@@ -2,10 +2,14 @@ const express = require('express');
 const cors = require('cors');
 const pool = require('./db');
 const { spawn } = require('child_process');
-const path = require('path')
+const path = require('path');
+const { error } = require('console');
+
 
 
 const app = express();
+const multer = require('multer');
+
 
 // Middleware
 app.use(cors());
@@ -52,24 +56,24 @@ app.get('/api/movies', async (req, res) => {
                     href: row.href,
                     extract: row.extract,
                     genres: [],
-                    actors:[]
+                    actors: []
 
                 };
             }
-             const genres = row.genre_name ? row.genre_name.split(',').map(g => g.trim()) : [];
-             genres.forEach(genre => {
-                 if (!movies[title].genres.includes(genre)) {
-                     movies[title].genres.push(genre);
-                 }
-             });
+            const genres = row.genre_name ? row.genre_name.split(',').map(g => g.trim()) : [];
+            genres.forEach(genre => {
+                if (!movies[title].genres.includes(genre)) {
+                    movies[title].genres.push(genre);
+                }
+            });
 
-             const actors = row.actors ? row.actors.split(',').map(a=>a.trim()) : [];
-             actors.forEach(actor =>{
-                if(!movies[title].actors.includes(actor)){
+            const actors = row.actors ? row.actors.split(',').map(a => a.trim()) : [];
+            actors.forEach(actor => {
+                if (!movies[title].actors.includes(actor)) {
                     movies[title].actors.push(actor);
                 }
-             });
-         });
+            });
+        });
         res.json(Object.values(movies));
     } catch (err) {
         res.status(500).json({ error: err.message });
@@ -80,7 +84,7 @@ app.get('/api/movies', async (req, res) => {
 app.get('/api/recommendations/:title', async (req, res) => {
     try {
         const { title } = req.params;
-        const { limit = 7, type = 'general' } = req.query; 
+        const { limit = 7, type = 'general' } = req.query;
 
         const python = spawn('python', [
             path.join(__dirname, 'recommender_service', 'recommend.py'),
@@ -124,7 +128,7 @@ app.get('/api/recommendations/actor/:name', async (req, res) => {
         const python = spawn('python', [
             path.join(__dirname, 'recommender_service', 'recommend.py'),  // Corrected path
             name,
-            limit.toString(),  
+            limit.toString(),
             'actor'
         ]);
 
@@ -216,52 +220,110 @@ app.post('/api/movies', async (req, res) => {
 
 // user registration 
 
-app.post('/api/auth/register', async(req,res) =>{
-    try{
-        const {first_name , last_name} = req.body;
-        const newUser = await pool.query('INSERT INTO USERS (first_name,last_name,favourites) VALUES ($1,$2,$3) RETURNING *',
-            [first_name , last_name , '[]']
+// app.post('/api/auth/register', async(req,res) =>{ 
+//     try{
+//         const {first_name , last_name} = req.body;
+//         const newUser = await pool.query(
+//             'INSERT INTO USERS (first_name,last_name,favourites) VALUES ($1,$2,$3) RETURNING *',
+//             [first_name , last_name , '[]']
+//         );
+//         res.json(newUser.rows[0]); 
+//     } catch(err){
+//         res.status(500).json({error : err.message});
+//     }
+// });
+
+// updated api for user - registration 
+
+app.post('/api/auth/register', async (req, res) => {
+    try {
+        const { username, first_name, last_name, email, password } = req.body;
+
+        const userExists = await pool.query(
+            'SELECT * FROM users WHERE username = $1',
+            [username]
         );
-        res.join(newUser.rows[0]);
-    }catch(err){
-        res.status(500).json({error : err.message});
+
+        if (userExists.rows.length > 0) {
+            return res.status(400).json({ error: "Username already exists" });
+        }
+
+        const newUser = await pool.query(
+            'INSERT INTO users (username, first_name, last_name, email, password_hash, favourites) VALUES ($1, $2, $3, $4, crypt($5, gen_salt(\'bf\')), $6) RETURNING user_id, username, first_name, last_name',
+            [username, first_name, last_name, email, password, '[]']
+        );
+
+        res.json(newUser.rows[0])
+
+    } catch (err) {
+        console.error("Some wrong in the registration api - server.js");
+        res.status(500).json({ error: err.message });
     }
 });
 
-// user - profiles 
 
-app.post('/api/users/:userId', async(req,res) => {
-    try{
-        const {userId} = req.params;
-        const user = await pool.query('SELECT * FROM USERS WHERE user_id = $1',[userId]);
+// user login 
+app.post('/api/auth/login', async (req, res) => {
+    try {
+        const { username, password } = req.body;
 
-        if(user.rows.length === 0){
-            return res.status(404).json({error : "User not found :("});
+        const user = await pool.query(
+            'SELECT user_id, username, first_name, last_name FROM users WHERE username = $1 AND password_hash = crypt($2, password_hash)',
+            [username, password]
+        );
+
+        if (user.rows.length === 0) {
+            return res.status(401).json({ error: "Invalid username or password" });
+        }
+
+        res.json(user.rows[0]);
+    } catch (err) {
+        console.log("The error is coming from login - server js");
+        res.status(500).json({ error: err.message });
+    }
+});
+
+
+
+
+// getting user - profiles 
+app.get('/api/users/:userId', async (req, res) => {
+    try {
+        const { userId } = req.params;
+        const user = await pool.query(
+            'SELECT user_id, username, first_name, last_name, favourites FROM users WHERE user_id = $1',
+            [userId]
+        );
+
+        if (user.rows.length === 0) {
+            return res.status(404).json({ error: "User not found" });
         }
         res.json(user.rows[0]);
-    }catch(err){
-        res.status(500).json({error : err.message});
+    } catch (err) {
+        res.status(500).json({ error: err.message });
     }
-})
+});
+
+
 
 
 // adding movies to favourites 
 
-app.post('/api/users/:userId/favorites', async(req,res) => {
-    try{
-        const {userId} = req.params;
-        const {movieTitle} = req.body;
+app.post('/api/users/:userId/favorites', async (req, res) => {
+    try {
+        const { userId } = req.params;
+        const { movieTitle } = req.body;
 
-        const userResult = await pool.query('SELECT favourites FROM USERS WHERE user_id = $1' , [userId]);
+        const userResult = await pool.query('SELECT favourites FROM USERS WHERE user_id = $1', [userId]);
 
-        if(userResult.rows.length === 0){
-            return res.status(404).json({error : "user not found :("});
+        if (userResult.rows.length === 0) {
+            return res.status(404).json({ error: "user not found :(" });
         }
 
         let favorites = JSON.parse(userResult.rows[0].favorites || '[]');
         if (!favorites.includes(movieTitle)) {
             favorites.push(movieTitle);
-          
+
             // updating favorites in the db 
             const updateResult = await pool.query(
                 'UPDATE USERS SET favourites = $1 WHERE user_id = $2 RETURNING *',
@@ -276,31 +338,69 @@ app.post('/api/users/:userId/favorites', async(req,res) => {
     }
 });
 
+
+// set up for file upload (image or avatar in our case lol)
+
+const storage = multer.diskStorage({
+    destination: './uploads/avatars',
+    filename: (req, file, cb) => {
+        cb(null, `user-${req.params.userId}-${Date.now()}${path.extname(file.originalname)}`);
+    }
+});
+
+
+const upload = multer({ storage });
+
+app.post('/api/users/:userId/avatar', upload.single('avatar'), async (req, res) => {
+    try {
+        const { userId } = req.params;
+        const avatarUrl = `/uploads/avatars/${req.file.filename}`;
+
+        const result = await pool.query(
+            'UPDATE users SET avatar_url = $1 WHERE user_id = $2 RETURNING *',
+            [avatarUrl, userId]
+        );
+
+        if (result.rows.length === 0) {
+            return res.status(404).json({ error: "User not found" });
+        }
+
+        res.json({ avatar_url: avatarUrl });
+    }
+    catch (err) {
+        console.log("error form avatar api - server.js");
+        res.status(500).json({error:err.message});
+    }
+});
+
+app.use('/uploads',express.static('uploads'));
+
+
 // Remove movie from favourites
 app.delete('/api/users/:userId/favorites/:movieTitle', async (req, res) => {
     try {
         const { userId, movieTitle } = req.params;
-        
+
         // getting the curr favorites 
         const userResult = await pool.query(
             'SELECT favourites FROM USERS WHERE user_id = $1',
             [userId]
         );
-        
+
         if (userResult.rows.length === 0) {
             return res.status(404).json({ error: "User not found" });
         }
-        
-         // parsing and updating the favorites 
+
+        // parsing and updating the favorites 
         let favorites = JSON.parse(userResult.rows[0].favourites || '[]');
         favorites = favorites.filter(title => title !== movieTitle);
-        
+
         // updating the db 
         const updateResult = await pool.query(
             'UPDATE USERS SET favourites = $1 WHERE user_id = $2 RETURNING *',
             [JSON.stringify(favorites), userId]
         );
-        
+
         res.json(updateResult.rows[0]);
     } catch (err) {
         res.status(500).json({ error: err.message });
@@ -312,11 +412,11 @@ app.get('/api/users/:userId/favorites', async (req, res) => {
     try {
         const { userId } = req.params;
         const result = await pool.query('SELECT favourites FROM USERS WHERE user_id = $1', [userId]);
-        
+
         if (result.rows.length === 0) {
             return res.status(404).json({ error: "User not found" });
         }
-        
+
         const favorites = JSON.parse(result.rows[0].favourites || '[]');
         res.json({ favorites });
     } catch (err) {
