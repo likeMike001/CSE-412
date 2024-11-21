@@ -1,11 +1,12 @@
 import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import './login.css';
 
 const Login = () => {
+    const navigate = useNavigate();
     const [formData, setFormData] = useState({
-        first_name: '',
-        last_name: ''
+        username: '',
+        password: ''
     });
     const [error, setError] = useState('');
 
@@ -18,13 +19,14 @@ const Login = () => {
                 body: JSON.stringify(formData)
             });
 
+            const data = await response.json();
+
             if (!response.ok) {
-                throw new Error('Login failed');
+                throw new Error(data.error || 'Login failed');
             }
 
-            const data = await response.json();
             localStorage.setItem('user', JSON.stringify(data));
-            window.location.href = '/search';
+            navigate('/search');
         } catch (error) {
             setError(error.message);
         }
@@ -36,16 +38,16 @@ const Login = () => {
                 <h2>Login</h2>
                 <input
                     type="text"
-                    name="first_name"
-                    placeholder="First Name"
-                    onChange={(e) => setFormData({...formData, first_name: e.target.value})}
+                    name="username"
+                    placeholder="Username"
+                    onChange={(e) => setFormData({...formData, username: e.target.value})}
                     required
                 />
                 <input
-                    type="text"
-                    name="last_name"
-                    placeholder="Last Name"
-                    onChange={(e) => setFormData({...formData, last_name: e.target.value})}
+                    type="password"
+                    name="password"
+                    placeholder="Password"
+                    onChange={(e) => setFormData({...formData, password: e.target.value})}
                     required
                 />
                 <button type="submit">Login</button>

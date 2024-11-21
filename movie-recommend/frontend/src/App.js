@@ -1,45 +1,66 @@
 import React from 'react';
-import { useState } from 'react';
+import { useState,useEffect } from 'react';
+import { AnimatePresence } from 'framer-motion';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import MovieList from "./components/movielist/movie.list.component";
 import SearchBar from "./components/searchbar/searchbar.component";
 import Register from "./components/auth/register";
 import Login from "./components/auth/login";
+import LoadingAnimation from './components/animation/animation';
+import UserMenu from './components/userMenu/usermenu';
+
 import './App.css';
 
 function App() {
-    const isAuthenticated = () => {
-        return localStorage.getItem('user') !== null;
-    };
+  const [loading, setLoading] = useState(true);
 
-    const PrivateRoute = ({ children }) => {
-        return isAuthenticated() ? children : <Navigate to="/login" />;
-    };
+  useEffect(() => {
+      
+      setTimeout(() => {
+          setLoading(false);
+      }, 3000); 
+  }, []);
 
-    return (
-        <Router>
-            <div className="app-container">
-                <header className="app-header">
-                    <h1>Movie Recommender</h1>
-                </header>
-                <main>
-                    <Routes>
-                        <Route path="/login" element={<Login />} />
-                        <Route path="/register" element={<Register />} />
-                        <Route 
-                            path="/search" 
-                            element={
-                                <PrivateRoute>
-                                    <SearchPage />
-                                </PrivateRoute>
-                            } 
-                        />
-                        <Route path="/" element={<Navigate to="/login" />} />
-                    </Routes>
-                </main>
-            </div>
-        </Router>
-    );
+  const isAuthenticated = () => {
+      return localStorage.getItem('user') !== null;
+  };
+
+  const PrivateRoute = ({ children }) => {
+      return isAuthenticated() ? children : <Navigate to="/login" />;
+  };
+
+  return (
+      <AnimatePresence mode="wait">
+          {loading ? (
+              <LoadingAnimation key="loading" />
+          ) : (
+              <Router>
+                  <div className="app-container">
+                      <header className="app-header">
+                          <h1>Movie Recommender</h1>
+                          {isAuthenticated() && (<UserMenu user = {JSON.parse(localStorage.getItem('user'))} />
+                        )}
+                      </header>
+                      <main>
+                          <Routes>
+                              <Route path="/login" element={<Login />} />
+                              <Route path="/register" element={<Register />} />
+                              <Route 
+                                  path="/search" 
+                                  element={
+                                      <PrivateRoute>
+                                          <SearchPage />
+                                      </PrivateRoute>
+                                  } 
+                              />
+                              <Route path="/" element={<Navigate to="/login" />} />
+                          </Routes>
+                      </main>
+                  </div>
+              </Router>
+          )}
+      </AnimatePresence>
+  );
 }
 const SearchPage = () => {
     const [searchParams, setSearchParams] = useState({
