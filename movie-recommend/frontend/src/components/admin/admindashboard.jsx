@@ -4,6 +4,7 @@ import './admindasboard.css';
 
 const AdminDashBoard = () => {
     const [analyticsData, setAnalyticsData] = useState(null);
+    const [userToDelete, setUserToDelete] = useState(null);
 
     useEffect(() => {
         const fetchData = async () => {
@@ -15,11 +16,42 @@ const AdminDashBoard = () => {
         fetchData();
     }, []);
 
+    const deleteUser = async (username) => {
+        try {
+            const response = await fetch(`http://localhost:3001/api/admin/users/${username}`, {
+                method: 'DELETE',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+            });
+
+            if (!response.ok) {
+                throw new Error('Failed to delete user');
+            }
+
+            setAnalyticsData((prev) => ({
+                ...prev,
+                userData: prev.userData.filter((user) => user.username !== username),
+            }));
+            alert('User deleted successfully!');
+            setUserToDelete(null); 
+        } catch (error) {
+            alert(`Error: ${error.message}`);
+        }
+    };
+
+    const confirmDelete = (username) => {
+        setUserToDelete(username);
+    };
+
+    const handleCancel = () => {
+        setUserToDelete(null);
+    };
+
     if (!analyticsData) return <div>Loading...</div>;
 
     const { totalUsers, userData } = analyticsData;
 
-   
     const signupsByMonthYear = userData.reduce((acc, user) => {
         const key = `${user.signupYear}-${user.signupMonth}`;
         acc[key] = (acc[key] || 0) + 1;
@@ -31,7 +63,6 @@ const AdminDashBoard = () => {
         users: value,
     }));
 
-    
     const favoritesBreakdown = userData.reduce(
         (acc, user) => {
             const count = user.favoritesCount;
@@ -48,7 +79,6 @@ const AdminDashBoard = () => {
         count,
     }));
 
-    
     const COLORS = ['#8884d8', '#82ca9d', '#ffc658'];
 
     return (
@@ -116,6 +146,7 @@ const AdminDashBoard = () => {
                             <th>Email</th>
                             <th>Signup Date</th>
                             <th>Favorites Count</th>
+                            <th>Actions</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -126,11 +157,39 @@ const AdminDashBoard = () => {
                                 <td>{user.email}</td>
                                 <td>{new Date(user.signupDate).toLocaleDateString()}</td>
                                 <td>{user.favoritesCount}</td>
+                                <td>
+                                    <button
+                                        onClick={() => confirmDelete(user.username)}
+                                        className="delete-button" 
+                                    >
+                                        Delete
+                                    </button>
+                                </td>
                             </tr>
                         ))}
                     </tbody>
                 </table>
             </div>
+
+            {userToDelete && (
+                <div className="modal">
+                    <div className="modal-content">
+                        <h3>Confirm Deletion</h3>
+                        <p>Are you sure you want to delete user "{userToDelete}"?</p>
+                        <div className="modal-actions">
+                            <button
+                                onClick={() => deleteUser(userToDelete)}
+                                className="modal-delete-button"
+                            >
+                                Yes, Delete
+                            </button>
+                            <button onClick={handleCancel} className="modal-cancel-button">
+                                Cancel
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 };
