@@ -10,6 +10,28 @@ const Login = () => {
     });
     const [error, setError] = useState('');
 
+    // const handleSubmit = async (e) => {
+    //     e.preventDefault();
+    //     try {
+    //         const response = await fetch('http://localhost:3001/api/auth/login', {
+    //             method: 'POST',
+    //             headers: { 'Content-Type': 'application/json' },
+    //             body: JSON.stringify(formData)
+    //         });
+
+    //         const data = await response.json();
+
+    //         if (!response.ok) {
+    //             throw new Error(data.error || 'Login failed');
+    //         }
+
+    //         localStorage.setItem('user', JSON.stringify(data));
+    //         navigate('/search');
+    //     } catch (error) {
+    //         setError(error.message);
+    //     }
+    // };
+
     const handleSubmit = async (e) => {
         e.preventDefault();
         try {
@@ -18,19 +40,31 @@ const Login = () => {
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(formData)
             });
-
+    
             const data = await response.json();
-
+    
             if (!response.ok) {
-                throw new Error(data.error || 'Login failed');
+                if (response.status === 401) {
+                    throw new Error('Invalid username or password');
+                } else {
+                    throw new Error(data.error || 'Login failed');
+                }
             }
-
+    
+            console.log('Login response:', data); // Debugging log
             localStorage.setItem('user', JSON.stringify(data));
-            navigate('/search');
+    
+            // Role-based redirection
+            if (data.is_admin) {
+                navigate('/admin');
+            } else {
+                navigate('/search');
+            }
         } catch (error) {
             setError(error.message);
         }
     };
+    
 
     return (
         <div className="login-container">

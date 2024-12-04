@@ -1,5 +1,5 @@
 import React from 'react';
-import { useState,useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { AnimatePresence } from 'framer-motion';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import MovieList from "./components/movielist/movie.list.component";
@@ -8,60 +8,103 @@ import Register from "./components/auth/register";
 import Login from "./components/auth/login";
 import LoadingAnimation from './components/animation/animation';
 import UserMenu from './components/userMenu/usermenu';
+import AdminDashBoard from './components/admin/admindashboard';
+
+
 
 import './App.css';
 
 function App() {
-  const [loading, setLoading] = useState(true);
+    const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-      
-      setTimeout(() => {
-          setLoading(false);
-      }, 3000); 
-  }, []);
+    useEffect(() => {
 
-  const isAuthenticated = () => {
-      return localStorage.getItem('user') !== null;
-  };
+        setTimeout(() => {
+            setLoading(false);
+        }, 3000);
+    }, []);
 
-  const PrivateRoute = ({ children }) => {
-      return isAuthenticated() ? children : <Navigate to="/login" />;
-  };
+    const isAuthenticated = () => {
+        return localStorage.getItem('user') !== null;
+    };
 
-  return (
-      <AnimatePresence mode="wait">
-          {loading ? (
-              <LoadingAnimation key="loading" />
-          ) : (
-              <Router>
-                  <div className="app-container">
-                      <header className="app-header">
-                          <h1>Movie Recommender</h1>
-                          {isAuthenticated() && (<UserMenu user = {JSON.parse(localStorage.getItem('user'))} />
-                        )}
-                      </header>
-                      <main>
-                          <Routes>
-                              <Route path="/login" element={<Login />} />
-                              <Route path="/register" element={<Register />} />
-                              <Route 
-                                  path="/search" 
-                                  element={
-                                      <PrivateRoute>
-                                          <SearchPage />
-                                      </PrivateRoute>
-                                  } 
-                              />
-                              <Route path="/" element={<Navigate to="/login" />} />
-                          </Routes>
-                      </main>
-                  </div>
-              </Router>
-          )}
-      </AnimatePresence>
-  );
+    const isAdmin = () => {
+        const user = JSON.parse(localStorage.getItem('user'));
+        return user && user.is_admin;
+    }
+
+    const PrivateRoute = ({ children, adminRequired = false }) => {
+
+
+        if (!isAuthenticated()) {
+            return <Navigate to="/login" />
+        }
+
+        //   return isAuthenticated() ? children : <Navigate to="/login" />;
+
+        if (adminRequired && !isAdmin()) {
+            return <Navigate to="/search" />
+        }
+        return children;
+    };
+
+    return (
+        <AnimatePresence mode="wait">
+            {loading ? (
+                <LoadingAnimation key="loading" />
+            ) : (
+                <Router>
+                    <div className="app-container">
+                        <header className="app-header">
+                            <h1>Movie Recommender</h1>
+                            {isAuthenticated() && (<UserMenu user={JSON.parse(localStorage.getItem('user'))} />
+                            )}
+                        </header>
+                        <main>
+                            <Routes>
+                                <Route path="/login" element={<Login />} />
+                                <Route path="/register" element={<Register />} />
+                                <Route
+                                    path="/search"
+                                    element={
+                                        <PrivateRoute>
+                                            <SearchPage />
+                                        </PrivateRoute>
+                                    }
+                                />
+                                <Route
+                                    path="/admin"
+                                    element={
+                                        <PrivateRoute adminRequired={true}>
+                                            <AdminDashBoard />
+                                        </PrivateRoute>
+                                    }
+                                />
+                                <Route
+                                    path="/admin"
+                                    element={
+                                        <PrivateRoute adminRequired={true}>
+                                            <AdminDashBoard />
+                                        </PrivateRoute>
+                                    }
+                                />
+                                <Route
+                                    path="/"
+                                    element={
+                                        isAuthenticated()
+                                            ? <Navigate to={isAdmin() ? "/admin" : "/search"} />
+                                            : <Navigate to="/login" />
+                                    }
+                                />
+                            </Routes>
+                        </main>
+                    </div>
+                </Router>
+            )}
+        </AnimatePresence>
+    );
 }
+
 const SearchPage = () => {
     const [searchParams, setSearchParams] = useState({
         term: '',
@@ -81,7 +124,7 @@ const SearchPage = () => {
         <>
             <SearchBar onSearch={handleSearch} />
             {hasSearched ? (
-                <MovieList 
+                <MovieList
                     searchTerm={searchParams.term}
                     searchType={searchParams.type}
                 />
