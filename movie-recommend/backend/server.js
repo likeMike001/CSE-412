@@ -443,9 +443,9 @@ app.get('/api/admin/analytics', async (req, res) => {
             ORDER BY created_at DESC
         `);
 
-   
+
         const analyticsData = result.rows.map(user => {
-            
+
             let favorites = [];
             try {
                 favorites = JSON.parse(user.favourites || '[]');
@@ -458,8 +458,8 @@ app.get('/api/admin/analytics', async (req, res) => {
                 username: user.username,
                 fullName: `${user.first_name} ${user.last_name}`,
                 email: user.email,
-                favorites: favorites, 
-                favoritesCount: favorites.length, 
+                favorites: favorites,
+                favoritesCount: favorites.length,
                 signupDate: user.created_at,
                 signupMonth: user.signup_month,
                 signupYear: user.signup_year
@@ -474,6 +474,36 @@ app.get('/api/admin/analytics', async (req, res) => {
         res.status(500).json({ error: err.message });
     }
 });
+
+
+// deleting a user from the db - by admin 
+
+
+
+app.delete('/api/admin/users/:username', async (req, res) => {
+    try {
+        const { username } = req.params;
+
+        const userCheck = await pool.query(
+            'SELECT * FROM users WHERE username = $1 AND is_admin = FALSE',
+            [username]
+        );
+
+        if(userCheck.rows.length==0){
+            return res.status(404).json({error : "user not found "});
+        }
+
+        await pool.query('DELETE FROM users WHERE username = $1', [username]);
+        res.json({ success: true, message: 'User deleted successfully' });
+    }catch(err){
+        console.error("Error in deleting the user");
+        res.status(500).json({error:'internal error looooool  :('});
+    }
+});
+
+
+
+
 
 // AmericanPsycho
 
