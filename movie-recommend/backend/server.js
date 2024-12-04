@@ -268,7 +268,7 @@ app.post('/api/auth/login', async (req, res) => {
         const { username, password } = req.body;
 
         const user = await pool.query(
-            'SELECT user_id, username, first_name, last_name FROM users WHERE username = $1 AND password_hash = crypt($2, password_hash)',
+            'SELECT user_id, username, first_name, last_name, is_admin FROM users WHERE username = $1 AND password_hash = crypt($2, password_hash)',
             [username, password]
         );
 
@@ -282,6 +282,7 @@ app.post('/api/auth/login', async (req, res) => {
         res.status(500).json({ error: err.message });
     }
 });
+
 
 // getting user - profiles 
 app.get('/api/users/:userId', async (req, res) => {
@@ -473,7 +474,6 @@ app.get('/api/admin/analytics', async (req, res) => {
         res.status(500).json({ error: err.message });
     }
 });
-
 
 // AmericanPsycho
 
