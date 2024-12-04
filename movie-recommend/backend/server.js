@@ -283,9 +283,6 @@ app.post('/api/auth/login', async (req, res) => {
     }
 });
 
-
-
-
 // getting user - profiles 
 app.get('/api/users/:userId', async (req, res) => {
     try {
@@ -303,8 +300,6 @@ app.get('/api/users/:userId', async (req, res) => {
         res.status(500).json({ error: err.message });
     }
 });
-
-
 
 
 // adding movies to favourites 
@@ -369,11 +364,11 @@ app.post('/api/users/:userId/avatar', upload.single('avatar'), async (req, res) 
     }
     catch (err) {
         console.log("error form avatar api - server.js");
-        res.status(500).json({error:err.message});
+        res.status(500).json({ error: err.message });
     }
 });
 
-app.use('/uploads',express.static('uploads'));
+app.use('/uploads', express.static('uploads'));
 
 
 // Remove movie from favourites
@@ -426,4 +421,59 @@ app.get('/api/users/:userId/favorites', async (req, res) => {
 
 
 
+
+// admin end point for admin analytics 
+
+app.get('/api/admin/analytics', async (req, res) => {
+    try {
+        const result = await pool.query(`
+            SELECT 
+                user_id,
+                username,
+                first_name,
+                last_name,
+                email,
+                favourites,
+                created_at,
+                EXTRACT(MONTH FROM created_at) as signup_month,
+                EXTRACT(YEAR FROM created_at) as signup_year
+            FROM users 
+            WHERE is_admin = FALSE
+            ORDER BY created_at DESC
+        `);
+
+   
+        const analyticsData = result.rows.map(user => {
+            
+            let favorites = [];
+            try {
+                favorites = JSON.parse(user.favourites || '[]');
+            } catch (e) {
+                console.error('Error parsing favorites for user:', user.user_id);
+            }
+
+            return {
+                userId: user.user_id,
+                username: user.username,
+                fullName: `${user.first_name} ${user.last_name}`,
+                email: user.email,
+                favorites: favorites, 
+                favoritesCount: favorites.length, 
+                signupDate: user.created_at,
+                signupMonth: user.signup_month,
+                signupYear: user.signup_year
+            };
+        });
+
+        res.json({
+            totalUsers: analyticsData.length,
+            userData: analyticsData
+        });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
+
 // AmericanPsycho
+
