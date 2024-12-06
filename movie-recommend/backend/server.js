@@ -203,38 +203,8 @@ app.listen(PORT, () => {
     console.log(`Server running on port ${PORT}`);
 });
 
-// Add a new movie
-app.post('/api/movies', async (req, res) => {
-    try {
-        const { title, genre, release_year, rating, plot } = req.body;
-        const result = await pool.query(
-            'INSERT INTO movies (title, genre, release_year, rating, plot) VALUES ($1, $2, $3, $4, $5) RETURNING *',
-            [title, genre, release_year, rating, plot]
-        );
-        res.json(result.rows[0]);
-    } catch (err) {
-        res.status(500).json({ error: err.message });
-    }
-});
-
-
-// user registration 
-
-// app.post('/api/auth/register', async(req,res) =>{ 
-//     try{
-//         const {first_name , last_name} = req.body;
-//         const newUser = await pool.query(
-//             'INSERT INTO USERS (first_name,last_name,favourites) VALUES ($1,$2,$3) RETURNING *',
-//             [first_name , last_name , '[]']
-//         );
-//         res.json(newUser.rows[0]); 
-//     } catch(err){
-//         res.status(500).json({error : err.message});
-//     }
-// });
 
 // updated api for user - registration 
-
 app.post('/api/auth/register', async (req, res) => {
     try {
         const { username, first_name, last_name, email, password } = req.body;
@@ -303,40 +273,118 @@ app.get('/api/users/:userId', async (req, res) => {
 });
 
 
-// adding movies to favourites 
 
-app.post('/api/users/:userId/favorites', async (req, res) => {
+// adding a movie to favorite 
+app.post('/api/users/:username/favorites', async (req, res) => {
     try {
-        const { userId } = req.params;
+        const username = req.params.username; 
+        const { movieTitle } = req.body; 
+
+        if (!movieTitle) {
+            return res.status(400).json({ error: "Movie title is required" });
+        }
+
+        // Check if user exists
+        const userCheck = await pool.query('SELECT favourites FROM users WHERE username = $1', [username]);
+
+        if (userCheck.rows.length === 0) {
+            return res.status(404).json({ error: "User not found" });
+        }
+
+        // Update favorites
+        const updateResult = await pool.query(
+            `UPDATE users 
+             SET favourites = CASE 
+                WHEN NOT favourites @> $1::jsonb 
+                THEN COALESCE(favourites, '[]'::jsonb) || $1::jsonb
+                ELSE favourites 
+             END
+             WHERE username = $2 
+             RETURNING favourites`,
+            [JSON.stringify(movieTitle), username]
+        );
+
+        res.json({
+            success: true,
+            message: updateResult.rows[0].favourites.includes(movieTitle) 
+                ? "Movie already in favorites" 
+                : "Movie added to favorites",
+            favorites: updateResult.rows[0].favourites,
+        });
+    } catch (err) {
+        console.error('Error:', err);
+        res.status(500).json({ error: "Internal server error" });
+    }
+});
+
+// api to remove a favorite for a user 
+
+app.delete('/api/users/:username/favorites', async (req, res) => {
+    try {
+        const username = req.params.username;
         const { movieTitle } = req.body;
 
-        const userResult = await pool.query('SELECT favourites FROM USERS WHERE user_id = $1', [userId]);
-
-        if (userResult.rows.length === 0) {
-            return res.status(404).json({ error: "user not found :(" });
+        if (!movieTitle) {
+            return res.status(400).json({ error: "Movie title is required" });
         }
 
-        let favorites = JSON.parse(userResult.rows[0].favorites || '[]');
-        if (!favorites.includes(movieTitle)) {
-            favorites.push(movieTitle);
+        // Check if user exists
+        const userCheck = await pool.query('SELECT favourites FROM users WHERE username = $1', [username]);
 
-            // updating favorites in the db 
-            const updateResult = await pool.query(
-                'UPDATE USERS SET favourites = $1 WHERE user_id = $2 RETURNING *',
-                [JSON.stringify(favorites), userId]
-            );
-            res.json(updateResult.rows[0]);
-        } else {
-            res.json({ message: "Movie already in favorites" });
+        if (userCheck.rows.length === 0) {
+            return res.status(404).json({ error: "User not found" });
         }
+
+        const updateResult = await pool.query(
+            `UPDATE users 
+             SET favourites = favourites - $1::jsonb
+             WHERE username = $2
+             RETURNING favourites`,
+            [JSON.stringify(movieTitle), username]
+        );
+
+        res.json({
+            success: true,
+            message: "Movie removed from favorites",
+            favorites: updateResult.rows[0].favourites,
+        });
     } catch (err) {
-        res.status(500).json({ error: err.message });
+        console.error('Error:', err);
+        res.status(500).json({ error: "Internal server error" });
     }
 });
 
 
-// set up for file upload (image or avatar in our case lol)
 
+
+
+// get all favorites of a user 
+app.get('/api/users/:username/favorites', async (req, res) => {
+    try {
+        const username = req.params.username; // Username from route parameter
+
+        // Check if user exists
+        const user = await pool.query('SELECT favourites FROM users WHERE username = $1', [username]);
+
+        if (user.rows.length === 0) {
+            return res.status(404).json({ error: "User not found" });
+        }
+
+        res.json({
+            success: true,
+            favorites: user.rows[0].favourites || [], // Return an empty array if no favorites
+        });
+    } catch (err) {
+        console.error('Error:', err);
+        res.status(500).json({ error: "Internal server error" });
+    }
+});
+
+
+
+
+
+// set up for file upload (image or avatar in our case lol)
 const storage = multer.diskStorage({
     destination: './uploads/avatars',
     filename: (req, file, cb) => {
@@ -425,6 +473,57 @@ app.get('/api/users/:userId/favorites', async (req, res) => {
 
 // admin end point for admin analytics 
 
+// app.get('/api/admin/analytics', async (req, res) => {
+//     try {
+//         const result = await pool.query(`
+//             SELECT 
+//                 user_id,
+//                 username,
+//                 first_name,
+//                 last_name,
+//                 email,
+//                 favourites,
+//                 created_at,
+//                 EXTRACT(MONTH FROM created_at) as signup_month,
+//                 EXTRACT(YEAR FROM created_at) as signup_year
+//             FROM users 
+//             WHERE is_admin = FALSE
+//             ORDER BY created_at DESC
+//         `);
+
+
+//         const analyticsData = result.rows.map(user => {
+
+//             let favorites = [];
+//             try {
+//                 favorites = JSON.parse(user.favourites || '[]');
+//             } catch (e) {
+//                 console.error('Error parsing favorites for user:', user.user_id);
+//             }
+
+//             return {
+//                 userId: user.user_id,
+//                 username: user.username,
+//                 fullName: `${user.first_name} ${user.last_name}`,
+//                 email: user.email,
+//                 favorites: favorites,
+//                 favoritesCount: favorites.length,
+//                 signupDate: user.created_at,
+//                 signupMonth: user.signup_month,
+//                 signupYear: user.signup_year
+//             };
+//         });
+
+//         res.json({
+//             totalUsers: analyticsData.length,
+//             userData: analyticsData
+//         });
+//     } catch (err) {
+//         res.status(500).json({ error: err.message });
+//     }
+
+// });
+
 app.get('/api/admin/analytics', async (req, res) => {
     try {
         const result = await pool.query(`
@@ -434,7 +533,7 @@ app.get('/api/admin/analytics', async (req, res) => {
                 first_name,
                 last_name,
                 email,
-                favourites,
+                favourites, -- JSONB field
                 created_at,
                 EXTRACT(MONTH FROM created_at) as signup_month,
                 EXTRACT(YEAR FROM created_at) as signup_year
@@ -443,32 +542,21 @@ app.get('/api/admin/analytics', async (req, res) => {
             ORDER BY created_at DESC
         `);
 
-
-        const analyticsData = result.rows.map(user => {
-
-            let favorites = [];
-            try {
-                favorites = JSON.parse(user.favourites || '[]');
-            } catch (e) {
-                console.error('Error parsing favorites for user:', user.user_id);
-            }
-
-            return {
-                userId: user.user_id,
-                username: user.username,
-                fullName: `${user.first_name} ${user.last_name}`,
-                email: user.email,
-                favorites: favorites,
-                favoritesCount: favorites.length,
-                signupDate: user.created_at,
-                signupMonth: user.signup_month,
-                signupYear: user.signup_year
-            };
-        });
+        const analyticsData = result.rows.map(user => ({
+            userId: user.user_id,
+            username: user.username,
+            fullName: `${user.first_name} ${user.last_name}`,
+            email: user.email,
+            favorites: user.favourites || [], // Use the JSONB field directly
+            favoritesCount: (user.favourites || []).length,
+            signupDate: user.created_at,
+            signupMonth: user.signup_month,
+            signupYear: user.signup_year,
+        }));
 
         res.json({
             totalUsers: analyticsData.length,
-            userData: analyticsData
+            userData: analyticsData,
         });
     } catch (err) {
         res.status(500).json({ error: err.message });
@@ -477,9 +565,6 @@ app.get('/api/admin/analytics', async (req, res) => {
 
 
 // deleting a user from the db - by admin 
-
-
-
 app.delete('/api/admin/users/:username', async (req, res) => {
     try {
         const { username } = req.params;
@@ -501,6 +586,22 @@ app.delete('/api/admin/users/:username', async (req, res) => {
     }
 });
 
+
+// planing to add an api for updating from admin - side 
+
+// Add a new movie - only admin should be able to add this 
+app.post('/api/movies', async (req, res) => {
+    try {
+        const { title, genre, release_year, rating, plot } = req.body;
+        const result = await pool.query(
+            'INSERT INTO movies (title, genre, release_year, rating, plot) VALUES ($1, $2, $3, $4, $5) RETURNING *',
+            [title, genre, release_year, rating, plot]
+        );
+        res.json(result.rows[0]);
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
 
 
 
