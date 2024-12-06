@@ -33,6 +33,9 @@ const MovieCard = ({ movie, isActive, isFavorite }) => {
                         </span>
                     ))}
                 </div>
+                <div>
+                    {/* <p>{movie.extract}</p> */}
+                </div>
             </div>
         </div>
     );

@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { BarChart, Bar, PieChart, Pie, Cell, Tooltip, Legend, XAxis, YAxis, CartesianGrid } from 'recharts';
+import Helper from './helper.component';
 import './admindasboard.css';
 
 const AdminDashBoard = () => {
@@ -332,6 +333,8 @@ const AdminDashBoard = () => {
                     </div>
                 </div>
             )}
+
+            <Helper />
         </div>
     );
 };
