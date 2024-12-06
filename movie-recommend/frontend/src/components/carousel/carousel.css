@@ -1,0 +1,17 @@
+/* button {
+    position: relative;
+    margin-top: 10px;
+    z-index: 50;       
+    pointer-events: auto !important; 
+} */
+
+button {
+    position: static; /* Let the button naturally flow in the layout */
+    margin-top: 10px; /* Add space between the button and the card */
+    z-index: auto; /* Prevent stacking issues */
+}
+
+.flex {
+    align-items: center; /* Ensure proper alignment of items */
+    justify-content: center; /* Center-align the button under the card */
+}

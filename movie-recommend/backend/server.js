@@ -486,6 +486,69 @@ app.delete('/api/admin/users/:username', async (req, res) => {
 });
 
 
+app.put('/api/admin/users/:username', async (req, res) => {
+    try {
+        const username = req.params.username;
+        const { fullName, email, favorites } = req.body;
+
+        // Validate required fields
+        if (!username) {
+            return res.status(400).json({ error: "Username is required" });
+        }
+
+        // Check if user exists
+        const userCheck = await pool.query('SELECT * FROM users WHERE username = $1', [username]);
+
+        if (userCheck.rows.length === 0) {
+            return res.status(404).json({ error: "User not found" });
+        }
+
+        // Prepare fields to update
+        const updates = [];
+        if (fullName) {
+            const [firstName, ...lastNameParts] = fullName.split(' ');
+            updates.push(`first_name = '${firstName}'`);
+            updates.push(`last_name = '${lastNameParts.join(' ')}'`);
+        }
+        if (email) {
+            updates.push(`email = '${email}'`);
+        }
+        if (favorites) {
+            updates.push(`favourites = '${JSON.stringify(favorites)}'::jsonb`);
+        }
+
+        // If no fields to update, return an error
+        if (updates.length === 0) {
+            return res.status(400).json({ error: "No valid fields to update" });
+        }
+
+        // Build the SQL query dynamically
+        const updateQuery = `
+            UPDATE users
+            SET ${updates.join(', ')}
+            WHERE username = $1
+            RETURNING user_id, username, first_name, last_name, email, favourites
+        `;
+        const updatedUser = await pool.query(updateQuery, [username]);
+
+        res.json({
+            success: true,
+            message: "User details updated successfully",
+            updatedUser: updatedUser.rows[0],
+        });
+    } catch (err) {
+        console.error('Error updating user:', err);
+        res.status(500).json({ error: "Internal server error" });
+    }
+});
+
+
+
+
+
+
+
+
 
 // planing to add an api for updating from admin - side 
 
