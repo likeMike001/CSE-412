@@ -318,6 +318,40 @@ app.post('/api/users/:username/favorites', async (req, res) => {
 });
 
 // api to remove a favorite for a user 
+// app.delete('/api/users/:username/favorites', async (req, res) => {
+//     try {
+//         const username = req.params.username;
+//         const { movieTitle } = req.body;
+
+//         if (!movieTitle) {
+//             return res.status(400).json({ error: "Movie title is required" });
+//         }
+
+//         // Check if user exists
+//         const userCheck = await pool.query('SELECT favourites FROM users WHERE username = $1', [username]);
+
+//         if (userCheck.rows.length === 0) {
+//             return res.status(404).json({ error: "User not found" });
+//         }
+
+//         const updateResult = await pool.query(
+//             `UPDATE users 
+//              SET favourites = favourites - $1::jsonb
+//              WHERE username = $2
+//              RETURNING favourites`,
+//             [JSON.stringify(movieTitle), username]
+//         );
+
+//         res.json({
+//             success: true,
+//             message: "Movie removed from favorites",
+//             favorites: updateResult.rows[0].favourites,
+//         });
+//     } catch (err) {
+//         console.error('Error:', err);
+//         res.status(500).json({ error: "Internal server error" });
+//     }
+// });
 app.delete('/api/users/:username/favorites', async (req, res) => {
     try {
         const username = req.params.username;
@@ -327,6 +361,8 @@ app.delete('/api/users/:username/favorites', async (req, res) => {
             return res.status(400).json({ error: "Movie title is required" });
         }
 
+        console.log('Movie to remove:', movieTitle); // Debugging log
+
         // Check if user exists
         const userCheck = await pool.query('SELECT favourites FROM users WHERE username = $1', [username]);
 
@@ -334,13 +370,24 @@ app.delete('/api/users/:username/favorites', async (req, res) => {
             return res.status(404).json({ error: "User not found" });
         }
 
+        // Remove movie from favourites
         const updateResult = await pool.query(
-            `UPDATE users 
-             SET favourites = favourites - $1::jsonb
+            `UPDATE users
+             SET favourites = (
+                 SELECT jsonb_agg(value)
+                 FROM jsonb_array_elements(favourites) AS value
+                 WHERE value != $1::jsonb
+             )
              WHERE username = $2
              RETURNING favourites`,
-            [JSON.stringify(movieTitle), username]
+            [JSON.stringify(movieTitle), username] // Fix: Use JSON.stringify for movieTitle
         );
+
+        console.log('Update result:', updateResult.rows); // Debugging log
+
+        if (updateResult.rows.length === 0) {
+            return res.status(404).json({ error: "Failed to update favorites" });
+        }
 
         res.json({
             success: true,
@@ -352,7 +399,6 @@ app.delete('/api/users/:username/favorites', async (req, res) => {
         res.status(500).json({ error: "Internal server error" });
     }
 });
-
 
 
 

@@ -1,4 +1,5 @@
 /* components/UserMenu/UserMenu.css */
+
 .user-menu {
     position: relative;
     margin-left: auto;
@@ -10,8 +11,9 @@
     height: 40px;
     border-radius: 50%;
     overflow: hidden;
-    border: 2px solid #fff;
+    border: 2px solid #ff6b00; /* Bright orange for visibility */
 }
+
 .avatar {
     width: 100%;
     height: 100%;
@@ -22,21 +24,24 @@
     position: absolute;
     top: 100%;
     right: 0;
-    background: white;
+    background: #222; /* Dark background for dropdown */
     border-radius: 8px;
-    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.5); /* Darker shadow for depth */
     width: 200px;
     z-index: 1000;
     margin-top: 8px;
+    color: #f5f5f5; /* Light text for readability */
 }
+
 .user-info {
     padding: 15px;
-    border-bottom: 1px solid #eee;
+    border-bottom: 1px solid #444; /* Darker border for the theme */
+    color: #f5f5f5; /* Light text for user info */
 }
 
 .username {
     display: block;
-    color: #666;
+    color: #ff6b00; /* Orange text for emphasis */
     font-size: 0.9em;
 }
 
@@ -53,17 +58,21 @@
     font-size: 14px;
     background: none;
     border: none;
+    color: #f5f5f5; /* Light text for menu items */
+    transition: background-color 0.3s ease;
 }
 
 .menu-item:hover {
-    background-color: #f5f5f5;
+    background-color: #333; /* Slightly lighter hover effect */
 }
 
 .upload-avatar {
-    color: #007bff;
+    color: #ff6b00; /* Orange for link visibility */
+    font-weight: bold;
 }
 
 /* Add this rule to target buttons specifically */
 button.menu-item {
-    color: #007bff;
+    color: #ff6b00; /* Orange for buttons */
+    font-weight: bold;
 }

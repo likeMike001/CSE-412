@@ -1,40 +1,71 @@
+SearchBar Styles
+
 .search-container {
-    width: 100%;
-    max-width: 600px;
-    margin: 20px auto;
-    padding: 0 20px;
-  }
-  
-  .search-form {
-    display: flex;
-    gap: 10px;
-  }
-  
-  .search-input {
-    flex: 1;
-    padding: 12px 20px;
-    border: 2px solid #ddd;
-    border-radius: 25px;
-    font-size: 16px;
-    outline: none;
-    transition: border-color 0.3s ease;
-  }
-  
-  .search-input:focus {
-    border-color: #007bff;
-  }
-  
-  .search-button {
-    padding: 12px 24px;
-    background-color: #007bff;
-    color: white;
-    border: none;
-    border-radius: 25px;
-    cursor: pointer;
-    font-size: 16px;
-    transition: background-color 0.3s ease;
-  }
-  
-  .search-button:hover {
-    background-color: #0056b3;
-  }
+  width: 100%;
+  max-width: 600px;
+  margin: 20px auto;
+  padding: 0 20px;
+}
+
+.search-form {
+  display: flex;
+  gap: 10px;
+}
+
+.search-input {
+  flex: 1;
+  padding: 12px 20px;
+  border: 2px solid #444;
+  border-radius: 25px;
+  font-size: 16px;
+  background-color: #222;
+  color: #f5f5f5;
+  outline: none;
+  transition: border-color 0.3s ease;
+}
+
+.search-input:focus {
+  border-color: #ff6b00; /* Changed focus color to orange */
+}
+
+.search-button {
+  padding: 12px 24px;
+  background-color: #ff6b00; /* Changed button color to orange */
+  color: white;
+  border: none;
+  border-radius: 25px;
+  cursor: pointer;
+  font-size: 16px;
+  transition: background-color 0.3s ease;
+}
+
+.search-button:hover {
+  background-color: #e65a00; /* Slightly darker orange on hover */
+}
+
+/* Dropdown styling for dark background */
+.search-dropdown {
+  padding: 12px;
+  font-size: 16px;
+  border: 2px solid #444;
+  border-radius: 25px;
+  background-color: #222; /* Dark background for dropdown */
+  color: #f5f5f5; /* Light text */
+  appearance: none;
+  outline: none;
+  transition: border-color 0.3s ease;
+}
+
+.search-dropdown:focus {
+  border-color: #ff6b00; /* Highlight border on focus */
+}
+
+.search-dropdown option {
+  background-color: #333; /* Darker dropdown options for better visibility */
+  color: #f5f5f5; /* Light text for options */
+}
+
+.search-dropdown option:hover {
+  background-color: #444; /* Slightly lighter background on hover */
+  color: #ff6b00; /* Orange text for hover effect */
+}
