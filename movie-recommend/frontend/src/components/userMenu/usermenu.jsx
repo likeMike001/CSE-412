@@ -1,6 +1,8 @@
 
 import React , {useState, useRef , useEffect} from 'react'
 import { useNavigate } from 'react-router-dom'
+import UserFavorites from './user.favorites';
+
 import './usermenu.css'
 
 const UserMenu = ({ user }) => {
@@ -68,7 +70,7 @@ const UserMenu = ({ user }) => {
                             />
                             Change Avatar
                         </label>
-                        <button className="menu-item" onClick={() => navigate('/profile')}>
+                        <button className="menu-item" onClick={() => navigate('/favorites')}>
                             Favorites
                         </button>
                         <button className="menu-item" onClick={handleLogout}>

@@ -10,6 +10,7 @@ import Login from './components/auth/login';
 import LoadingAnimation from './components/animation/animation';
 import UserMenu from './components/userMenu/usermenu';
 import AdminDashBoard from './components/admin/admindashboard';
+import UserFavorites from './components/userMenu/user.favorites';
 
 import './App.css';
 
@@ -69,6 +70,14 @@ function App() {
                                     element={
                                         <PrivateRoute>
                                             <SearchPage />
+                                        </PrivateRoute>
+                                    }
+                                />
+                                <Route
+                                    path='/favorites'
+                                    element={
+                                        <PrivateRoute >
+                                        <UserFavorites user={authenticatedUser} />
                                         </PrivateRoute>
                                     }
                                 />
