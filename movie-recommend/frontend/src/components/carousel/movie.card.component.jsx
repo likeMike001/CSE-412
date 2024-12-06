@@ -112,6 +112,9 @@ const MovieCard = ({ movie, isActive, isFavorite, onFavoriteToggle }) => {
                         </div>
                     </div>
                 </div>
+                <div>
+                    {/* <p>{movie.extract}</p> */}
+                </div>
             </div>
         </div>
     );

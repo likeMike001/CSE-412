@@ -277,8 +277,8 @@ app.get('/api/users/:userId', async (req, res) => {
 // adding a movie to favorite 
 app.post('/api/users/:username/favorites', async (req, res) => {
     try {
-        const username = req.params.username; 
-        const { movieTitle } = req.body; 
+        const username = req.params.username;
+        const { movieTitle } = req.body;
 
         if (!movieTitle) {
             return res.status(400).json({ error: "Movie title is required" });
@@ -306,8 +306,8 @@ app.post('/api/users/:username/favorites', async (req, res) => {
 
         res.json({
             success: true,
-            message: updateResult.rows[0].favourites.includes(movieTitle) 
-                ? "Movie already in favorites" 
+            message: updateResult.rows[0].favourites.includes(movieTitle)
+                ? "Movie already in favorites"
                 : "Movie added to favorites",
             favorites: updateResult.rows[0].favourites,
         });
@@ -317,41 +317,6 @@ app.post('/api/users/:username/favorites', async (req, res) => {
     }
 });
 
-// api to remove a favorite for a user 
-// app.delete('/api/users/:username/favorites', async (req, res) => {
-//     try {
-//         const username = req.params.username;
-//         const { movieTitle } = req.body;
-
-//         if (!movieTitle) {
-//             return res.status(400).json({ error: "Movie title is required" });
-//         }
-
-//         // Check if user exists
-//         const userCheck = await pool.query('SELECT favourites FROM users WHERE username = $1', [username]);
-
-//         if (userCheck.rows.length === 0) {
-//             return res.status(404).json({ error: "User not found" });
-//         }
-
-//         const updateResult = await pool.query(
-//             `UPDATE users 
-//              SET favourites = favourites - $1::jsonb
-//              WHERE username = $2
-//              RETURNING favourites`,
-//             [JSON.stringify(movieTitle), username]
-//         );
-
-//         res.json({
-//             success: true,
-//             message: "Movie removed from favorites",
-//             favorites: updateResult.rows[0].favourites,
-//         });
-//     } catch (err) {
-//         console.error('Error:', err);
-//         res.status(500).json({ error: "Internal server error" });
-//     }
-// });
 app.delete('/api/users/:username/favorites', async (req, res) => {
     try {
         const username = req.params.username;
@@ -403,28 +368,65 @@ app.delete('/api/users/:username/favorites', async (req, res) => {
 
 
 
+
+
 // get all favorites of a user 
+// app.get('/api/users/:username/favorites', async (req, res) => {
+//     try {
+//         const username = req.params.username; // Username from route parameter
+
+//         // Check if user exists
+//         const user = await pool.query('SELECT favourites FROM users WHERE username = $1', [username]);
+
+//         if (user.rows.length === 0) {
+//             return res.status(404).json({ error: "User not found" });
+//         }
+
+//         res.json({
+//             success: true,
+//             favorites: user.rows[0].favourites || [], // Return an empty array if no favorites
+//         });
+//     } catch (err) {
+//         console.error('Error:', err);
+//         res.status(500).json({ error: "Internal server error" });
+//     }
+// });
+
+
+// getting the user's favorites + with thumbnail 
 app.get('/api/users/:username/favorites', async (req, res) => {
     try {
-        const username = req.params.username; // Username from route parameter
+        const username = req.params.username; 
 
-        // Check if user exists
-        const user = await pool.query('SELECT favourites FROM users WHERE username = $1', [username]);
+      
+        const userResult = await pool.query('SELECT favourites FROM users WHERE username = $1', [username]);
 
-        if (user.rows.length === 0) {
+        if (userResult.rows.length === 0) {
             return res.status(404).json({ error: "User not found" });
         }
 
+        const favorites = userResult.rows[0].favourites || [];
+
+        // If the user has no favorites, return an empty array
+        if (favorites.length === 0) {
+            return res.json({ success: true, favorites: [] });
+        }
+
+        const placeholders = favorites.map((_, index) => `$${index + 1}`).join(','); // Create placeholders for SQL query
+        const movieResult = await pool.query(
+            `SELECT title, year, thumbnail FROM movie WHERE title IN (${placeholders})`,
+            favorites
+        );
+
         res.json({
             success: true,
-            favorites: user.rows[0].favourites || [], // Return an empty array if no favorites
+            favorites: movieResult.rows, 
         });
     } catch (err) {
         console.error('Error:', err);
         res.status(500).json({ error: "Internal server error" });
     }
 });
-
 
 
 
@@ -519,15 +521,15 @@ app.delete('/api/admin/users/:username', async (req, res) => {
             [username]
         );
 
-        if(userCheck.rows.length==0){
-            return res.status(404).json({error : "user not found "});
+        if (userCheck.rows.length == 0) {
+            return res.status(404).json({ error: "user not found " });
         }
 
         await pool.query('DELETE FROM users WHERE username = $1', [username]);
         res.json({ success: true, message: 'User deleted successfully' });
-    }catch(err){
+    } catch (err) {
         console.error("Error in deleting the user");
-        res.status(500).json({error:'internal error looooool  :('});
+        res.status(500).json({ error: 'internal error looooool  :(' });
     }
 });
 
@@ -589,10 +591,48 @@ app.put('/api/admin/users/:username', async (req, res) => {
 });
 
 
+// api to update the extract from the admin side 
 
+app.put('/api/admin/movies/:title', async (req, res) => {
+    try {
+        const { title } = req.params;
+        const { extract } = req.body;
 
+        // Validate the required fields
+        if (!title || !extract) {
+            return res.status(400).json({ error: "Both title and extract are required" });
+        }
 
+        // Check if the movie exists in the 'movie' table
+        const movieCheck = await pool.query(
+            'SELECT * FROM movie WHERE title = $1',
+            [title]
+        );
 
+        if (movieCheck.rows.length === 0) {
+            return res.status(404).json({ error: "Movie not found" });
+        }
+
+        // Update the 'extract' field
+        const updateQuery = `
+            UPDATE movie
+            SET extract = $1
+            WHERE title = $2
+            RETURNING title, year, thumbnail, href, extract
+        `;
+        const updatedMovie = await pool.query(updateQuery, [extract, title]);
+
+        // Respond with the updated movie details
+        res.json({
+            success: true,
+            message: "Movie extract updated successfully",
+            updatedMovie: updatedMovie.rows[0],
+        });
+    } catch (err) {
+        console.error("Error updating movie extract:", err);
+        res.status(500).json({ error: "Internal server error" });
+    }
+});
 
 
 
@@ -611,6 +651,7 @@ app.post('/api/movies', async (req, res) => {
         res.status(500).json({ error: err.message });
     }
 });
+
 
 
 
