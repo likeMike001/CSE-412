@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import Confetti from 'react-confetti';
 import './register.css';
 
 const Register = () => {
@@ -11,6 +12,7 @@ const Register = () => {
         password: ''
     });
     const [error, setError] = useState('');
+    const [success, setSuccess] = useState(false);
 
     const handleSubmit = async (e) => {
         e.preventDefault();
@@ -28,15 +30,16 @@ const Register = () => {
             }
 
             localStorage.setItem('user', JSON.stringify(data));
-            navigate('/search');
+            setSuccess(true); 
+            setTimeout(() => navigate('/search'), 4000); 
         } catch (error) {
             setError(error.message);
         }
     };
 
-
     return (
         <div className="register-container">
+            {success && <Confetti />}
             <form onSubmit={handleSubmit}>
                 <h2>Register</h2>
                 <input
