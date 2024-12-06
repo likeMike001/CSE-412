@@ -318,7 +318,6 @@ app.post('/api/users/:username/favorites', async (req, res) => {
 });
 
 // api to remove a favorite for a user 
-
 app.delete('/api/users/:username/favorites', async (req, res) => {
     try {
         const username = req.params.username;
@@ -420,110 +419,10 @@ app.post('/api/users/:userId/avatar', upload.single('avatar'), async (req, res) 
 app.use('/uploads', express.static('uploads'));
 
 
-// Remove movie from favourites
-app.delete('/api/users/:userId/favorites/:movieTitle', async (req, res) => {
-    try {
-        const { userId, movieTitle } = req.params;
-
-        // getting the curr favorites 
-        const userResult = await pool.query(
-            'SELECT favourites FROM USERS WHERE user_id = $1',
-            [userId]
-        );
-
-        if (userResult.rows.length === 0) {
-            return res.status(404).json({ error: "User not found" });
-        }
-
-        // parsing and updating the favorites 
-        let favorites = JSON.parse(userResult.rows[0].favourites || '[]');
-        favorites = favorites.filter(title => title !== movieTitle);
-
-        // updating the db 
-        const updateResult = await pool.query(
-            'UPDATE USERS SET favourites = $1 WHERE user_id = $2 RETURNING *',
-            [JSON.stringify(favorites), userId]
-        );
-
-        res.json(updateResult.rows[0]);
-    } catch (err) {
-        res.status(500).json({ error: err.message });
-    }
-});
-
-// Get users  favorites
-app.get('/api/users/:userId/favorites', async (req, res) => {
-    try {
-        const { userId } = req.params;
-        const result = await pool.query('SELECT favourites FROM USERS WHERE user_id = $1', [userId]);
-
-        if (result.rows.length === 0) {
-            return res.status(404).json({ error: "User not found" });
-        }
-
-        const favorites = JSON.parse(result.rows[0].favourites || '[]');
-        res.json({ favorites });
-    } catch (err) {
-        res.status(500).json({ error: err.message });
-    }
-});
 
 
 
-
-// admin end point for admin analytics 
-
-// app.get('/api/admin/analytics', async (req, res) => {
-//     try {
-//         const result = await pool.query(`
-//             SELECT 
-//                 user_id,
-//                 username,
-//                 first_name,
-//                 last_name,
-//                 email,
-//                 favourites,
-//                 created_at,
-//                 EXTRACT(MONTH FROM created_at) as signup_month,
-//                 EXTRACT(YEAR FROM created_at) as signup_year
-//             FROM users 
-//             WHERE is_admin = FALSE
-//             ORDER BY created_at DESC
-//         `);
-
-
-//         const analyticsData = result.rows.map(user => {
-
-//             let favorites = [];
-//             try {
-//                 favorites = JSON.parse(user.favourites || '[]');
-//             } catch (e) {
-//                 console.error('Error parsing favorites for user:', user.user_id);
-//             }
-
-//             return {
-//                 userId: user.user_id,
-//                 username: user.username,
-//                 fullName: `${user.first_name} ${user.last_name}`,
-//                 email: user.email,
-//                 favorites: favorites,
-//                 favoritesCount: favorites.length,
-//                 signupDate: user.created_at,
-//                 signupMonth: user.signup_month,
-//                 signupYear: user.signup_year
-//             };
-//         });
-
-//         res.json({
-//             totalUsers: analyticsData.length,
-//             userData: analyticsData
-//         });
-//     } catch (err) {
-//         res.status(500).json({ error: err.message });
-//     }
-
-// });
-
+// getting admin analytics 
 app.get('/api/admin/analytics', async (req, res) => {
     try {
         const result = await pool.query(`
@@ -585,6 +484,7 @@ app.delete('/api/admin/users/:username', async (req, res) => {
         res.status(500).json({error:'internal error looooool  :('});
     }
 });
+
 
 
 // planing to add an api for updating from admin - side 
