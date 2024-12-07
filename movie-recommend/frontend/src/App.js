@@ -1,8 +1,6 @@
-
-
 import React, { useState, useEffect } from 'react';
 import { AnimatePresence } from 'framer-motion';
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate, useNavigate } from 'react-router-dom';
 import MovieList from './components/movielist/movie.list.component';
 import SearchBar from './components/searchbar/searchbar.component';
 import Register from './components/auth/register';
@@ -52,12 +50,7 @@ function App() {
             ) : (
                 <Router>
                     <div className="app-container">
-                        <header className="app-header">
-                            <h1>Movie Recommender</h1>
-                            {isAuthenticated() && (
-                                <UserMenu user={authenticatedUser} onLogout={logout} />
-                            )}
-                        </header>
+                        <Header isAuthenticated={isAuthenticated} isAdmin={isAdmin} authenticatedUser={authenticatedUser} logout={logout} />
                         <main>
                             <Routes>
                                 <Route
@@ -74,10 +67,10 @@ function App() {
                                     }
                                 />
                                 <Route
-                                    path='/favorites'
+                                    path="/favorites"
                                     element={
-                                        <PrivateRoute >
-                                        <UserFavorites user={authenticatedUser} />
+                                        <PrivateRoute>
+                                            <UserFavorites user={authenticatedUser} />
                                         </PrivateRoute>
                                     }
                                 />
@@ -107,6 +100,23 @@ function App() {
         </AnimatePresence>
     );
 }
+
+const Header = ({ isAuthenticated, isAdmin, authenticatedUser, logout }) => {
+    const navigate = useNavigate();
+
+    const handleLogoClick = () => {
+        navigate('/');
+    };
+
+    return (
+        <header className="app-header">
+            <h1 onClick={handleLogoClick} style={{ cursor: 'pointer' }}>
+                Movie Recommender
+            </h1>
+            {isAuthenticated() && <UserMenu user={authenticatedUser} onLogout={logout} />}
+        </header>
+    );
+};
 
 const SearchPage = () => {
     const [searchParams, setSearchParams] = useState({
