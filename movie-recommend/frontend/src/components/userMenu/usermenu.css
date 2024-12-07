@@ -76,3 +76,9 @@ button.menu-item {
     color: #ff6b00; /* Orange for buttons */
     font-weight: bold;
 }
+.avatar {
+    width: 50px; /* Ensure proper size */
+    height: 50px;
+    border-radius: 50%; /* For circular images */
+    object-fit: cover; /* Ensure the image scales properly */
+}

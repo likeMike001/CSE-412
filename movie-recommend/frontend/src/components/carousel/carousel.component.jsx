@@ -77,7 +77,7 @@ const Carousel = ({ items }) => {
     };
 
     return (
-        <div className="flex items-center justify-center min-h-screen bg-black">
+        <div className="flex items-center justify-center min-h-screen bg-#121212">
             <div className="relative w-[900px] h-[500px]">
                 <div className="absolute inset-0 flex items-center justify-center perspective-1000">
                     <div className="relative w-full h-full">
@@ -112,24 +112,6 @@ const Carousel = ({ items }) => {
                                             onFavoriteToggle={() => handleFavoriteToggle(item)}
                                         />
                                     </motion.div>
-
-
-
-                                    {/* Button Section */}
-                                    {/* <div className="mt-4">
-                                        <button
-                                            onClick={() => handleFavoriteToggle(item)}
-                                            className={`px-6 py-2 text-sm font-semibold rounded-lg transition-all ${
-                                                favorites.includes(item.title)
-                                                    ? 'bg-red-600 text-white hover:bg-red-500'
-                                                    : 'bg-gray-600 text-white hover:bg-gray-500'
-                                            }`}
-                                        >
-                                            {favorites.includes(item.title)
-                                                ? 'Remove from Favorites'
-                                                : 'Add to Favorites'}
-                                        </button>
-                                    </div> */}
                                 </div>
                             );
                         })}

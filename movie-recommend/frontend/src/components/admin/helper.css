@@ -1,22 +1,22 @@
-
 .helper-container {
     max-width: 500px;
     margin: 50px auto;
     padding: 20px;
-    background-color: #f9f9f9;
-    border: 1px solid #ddd;
+    background: rgba(255, 255, 255, 0.05); /* Transparent background for dark theme */
+    border: 1px solid rgba(255, 255, 255, 0.2); /* Subtle border */
     border-radius: 8px;
-    box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
-    font-family: Arial, sans-serif;
+    box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.6); /* Darker shadow for depth */
+    font-family: 'Arial', sans-serif;
+    color: #f5f5f5;
 }
 
 .helper-container h1 {
     text-align: center;
-    color: #333;
+    color: #ff6b00; /* Orange highlight color */
     margin-bottom: 20px;
     font-size: 24px;
+    font-family: 'Cinzel', serif; /* Consistent with the app's header */
 }
-
 
 .helper-container form {
     display: flex;
@@ -24,28 +24,26 @@
     gap: 15px;
 }
 
-
 .helper-container form label {
     font-weight: bold;
-    color: #555;
+    color: #f5f5f5; /* Light text for labels */
     margin-bottom: 5px;
 }
-
 
 .helper-container form input,
 .helper-container form textarea {
     width: 100%;
     padding: 10px;
-    border: 1px solid #ccc;
+    background: rgba(255, 255, 255, 0.1); /* Slightly darker background for inputs */
+    border: 1px solid rgba(255, 255, 255, 0.2); /* Subtle border */
     border-radius: 4px;
     font-size: 16px;
-    color: #333;
+    color: #f5f5f5; /* Light text color */
 }
-
 
 .helper-container form input::placeholder,
 .helper-container form textarea::placeholder {
-    color: #aaa;
+    color: rgba(255, 255, 255, 0.5); /* Muted placeholder color */
 }
 
 .helper-container form textarea {
@@ -53,37 +51,34 @@
     resize: vertical;
 }
 
-
 .helper-container form button {
     padding: 10px 15px;
-    background-color: #4caf50;
+    background-color: #ff6b00; /* Consistent with the app's orange color */
     color: white;
     border: none;
     border-radius: 4px;
     cursor: pointer;
     font-size: 16px;
     font-weight: bold;
-    transition: background-color 0.3s;
+    transition: background-color 0.3s, transform 0.2s;
 }
 
-
 .helper-container form button:hover {
-    background-color: #45a049;
+    background-color: #e65a00; /* Darker orange on hover */
+    transform: translateY(-2px); /* Slight lift on hover */
 }
 
 .helper-container p {
     margin-top: 15px;
     text-align: center;
-    color: #007bff;
+    color: #007bff; /* Bright blue for links or general info */
     font-size: 14px;
     font-weight: bold;
 }
 
-
 .helper-container p.error {
-    color: #e74c3c;
+    color: #e74c3c; /* Consistent red for errors */
 }
-
 
 @media (max-width: 768px) {
     .helper-container {

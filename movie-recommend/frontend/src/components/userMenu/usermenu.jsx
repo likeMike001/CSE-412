@@ -7,7 +7,7 @@ import './usermenu.css'
 
 const UserMenu = ({ user }) => {
     const [isOpen, setIsOpen] = useState(false);
-    const [avatar, setAvatar] = useState(user.avatar || '/default-avatar.png');
+    const [avatar, setAvatar] = useState(user.avatar || 'movie-recommend/frontend/src/default-avatar.png');
     const dropdownRef = useRef(null);
     const navigate = useNavigate();
 

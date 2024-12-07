@@ -1,60 +1,83 @@
 .admin-dashboard {
     padding: 20px;
-    font-family: Arial, sans-serif;
+    font-family: 'Arial', sans-serif;
+    background: linear-gradient(to bottom, #121212, #1f1f1f);
+    color: #f5f5f5;
+    min-height: 100vh;
 }
 
 h1 {
     text-align: center;
     margin-bottom: 20px;
+    font-size: 2.5rem;
+    color: #ff6b00;
+    font-family: 'Cinzel', serif;
 }
 
 .dashboard-metrics {
     display: flex;
     justify-content: space-around;
     margin-bottom: 20px;
+    gap: 1.5rem;
 }
 
 .metric-card {
-    background: #f5f5f5;
-    border: 1px solid #ddd;
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.2);
     padding: 15px;
     border-radius: 8px;
     text-align: center;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5);
+}
+
+.metric-card h3 {
+    color: #ff6b00;
 }
 
 .chart-section {
     display: flex;
     justify-content: space-around;
     margin-bottom: 20px;
+    gap: 1.5rem;
 }
 
 .chart-container {
     text-align: center;
+    color: #f5f5f5;
 }
 
 .recent-signups table {
     width: 100%;
     border-collapse: collapse;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 8px;
+    overflow: hidden;
 }
 
 .recent-signups th, .recent-signups td {
-    border: 1px solid #ddd;
+    border: 1px solid rgba(255, 255, 255, 0.2);
     padding: 8px;
     text-align: left;
+    color: #f5f5f5;
 }
 
 .recent-signups th {
-    background-color: #f4f4f4;
+    background-color: rgba(255, 255, 255, 0.2);
+    color: #ff6b00;
 }
 
+.recent-signups tr:nth-child(even) {
+    background: rgba(255, 255, 255, 0.05);
+}
 
+/* Modal styles */
 .modal {
     position: fixed;
     top: 0;
     left: 0;
     width: 100%;
     height: 100%;
-    background: rgba(0, 0, 0, 0.5);
+    background: rgba(0, 0, 0, 0.8);
     display: flex;
     justify-content: center;
     align-items: center;
@@ -62,16 +85,18 @@ h1 {
 }
 
 .modal-content {
-    background: white;
+    background: #1f1f1f;
     padding: 20px;
     border-radius: 8px;
     text-align: center;
     width: 300px;
     box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    color: #f5f5f5;
 }
 
 .modal-content h3 {
     margin-bottom: 10px;
+    color: #ff6b00;
 }
 
 .modal-content p {
@@ -99,8 +124,8 @@ h1 {
 }
 
 .modal-cancel-button {
-    background-color: #ddd;
-    color: black;
+    background-color: rgba(255, 255, 255, 0.1);
+    color: #f5f5f5;
     border: none;
     padding: 8px 16px;
     font-size: 14px;
@@ -110,9 +135,10 @@ h1 {
 }
 
 .modal-cancel-button:hover {
-    background-color: #bbb;
+    background-color: rgba(255, 255, 255, 0.2);
 }
 
+/* Delete button */
 .delete-button {
     background-color: #ff4d4d; 
     color: white;
@@ -128,14 +154,14 @@ h1 {
     background-color: #ff1a1a; 
 }
 
-
+/* Loading overlay */
 .loading-overlay {
     position: fixed;
     top: 0;
     left: 0;
     width: 100%;
     height: 100%;
-    background: rgba(0, 0, 0, 0.5);
+    background: rgba(0, 0, 0, 0.8);
     display: flex;
     justify-content: center;
     align-items: center;
@@ -144,7 +170,7 @@ h1 {
 
 .spinner {
     border: 4px solid rgba(255, 255, 255, 0.3);
-    border-top: 4px solid #fff;
+    border-top: 4px solid #ff6b00;
     border-radius: 50%;
     width: 40px;
     height: 40px;
