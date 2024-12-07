@@ -368,31 +368,6 @@ app.delete('/api/users/:username/favorites', async (req, res) => {
 
 
 
-
-
-// get all favorites of a user 
-// app.get('/api/users/:username/favorites', async (req, res) => {
-//     try {
-//         const username = req.params.username; // Username from route parameter
-
-//         // Check if user exists
-//         const user = await pool.query('SELECT favourites FROM users WHERE username = $1', [username]);
-
-//         if (user.rows.length === 0) {
-//             return res.status(404).json({ error: "User not found" });
-//         }
-
-//         res.json({
-//             success: true,
-//             favorites: user.rows[0].favourites || [], // Return an empty array if no favorites
-//         });
-//     } catch (err) {
-//         console.error('Error:', err);
-//         res.status(500).json({ error: "Internal server error" });
-//     }
-// });
-
-
 // getting the user's favorites + with thumbnail 
 app.get('/api/users/:username/favorites', async (req, res) => {
     try {
@@ -639,20 +614,54 @@ app.put('/api/admin/movies/:title', async (req, res) => {
 // planing to add an api for updating from admin - side 
 
 // Add a new movie - only admin should be able to add this 
-app.post('/api/movies', async (req, res) => {
+// app.post('/api/movies', async (req, res) => {
+//     try {
+//         const { title, genre, release_year, rating, plot } = req.body;
+//         const result = await pool.query(
+//             'INSERT INTO movies (title, genre, release_year, rating, plot) VALUES ($1, $2, $3, $4, $5) RETURNING *',
+//             [title, genre, release_year, rating, plot]
+//         );
+//         res.json(result.rows[0]);
+//     } catch (err) {
+//         res.status(500).json({ error: err.message });
+//     }
+// });
+
+
+// Add a new movie - only admin should be able to add this
+app.post('/api/admin/movies', async (req, res) => {
     try {
-        const { title, genre, release_year, rating, plot } = req.body;
+        const { title, year, thumbnail, href, extract } = req.body;
+
+        // Validate required fields
+        if (!title || !year || !thumbnail || !href || !extract) {
+            return res.status(400).json({ error: "All fields (title, year, thumbnail, href, extract) are required." });
+        }
+
+        // Check for duplicate movie title
+        const movieCheck = await pool.query('SELECT * FROM movie WHERE title = $1', [title]);
+        if (movieCheck.rows.length > 0) {
+            return res.status(409).json({ error: "A movie with this title already exists." });
+        }
+
+        // Insert the new movie
         const result = await pool.query(
-            'INSERT INTO movies (title, genre, release_year, rating, plot) VALUES ($1, $2, $3, $4, $5) RETURNING *',
-            [title, genre, release_year, rating, plot]
+            `INSERT INTO movie (title, year, thumbnail, href, extract) 
+             VALUES ($1, $2, $3, $4, $5) RETURNING *`,
+            [title, year, thumbnail, href, extract]
         );
-        res.json(result.rows[0]);
+
+        // Respond with the newly created movie details
+        res.status(201).json({
+            success: true,
+            message: "Movie added successfully.",
+            movie: result.rows[0],
+        });
     } catch (err) {
-        res.status(500).json({ error: err.message });
+        console.error("Error adding new movie:", err);
+        res.status(500).json({ error: "Internal server error" });
     }
 });
-
-
 
 
 
