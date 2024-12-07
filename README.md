@@ -71,3 +71,12 @@ npm start
 #### Presenation Link 
 - https://www.youtube.com/watch?v=HmiNJXiQjm0
 
+#### Images of the Application
+<img src = "https://github.com/likeMike001/CSE-412/blob/main/movie-recommend/frontend/src/assets/image1.png" width="400" >
+<img src = "https://github.com/likeMike001/CSE-412/blob/main/movie-recommend/frontend/src/assets/image2.png" width="400" >
+<img src = "https://github.com/likeMike001/CSE-412/blob/main/movie-recommend/frontend/src/assets/image3.png" width="400" >
+<img src = "https://github.com/likeMike001/CSE-412/blob/main/movie-recommend/frontend/src/assets/image4.png" width="400" >
+<img src = "https://github.com/likeMike001/CSE-412/blob/main/movie-recommend/frontend/src/assets/image5.png" width="400" >
+<img src = "https://github.com/likeMike001/CSE-412/blob/main/movie-recommend/frontend/src/assets/image6.png" width="400" >
+
+
