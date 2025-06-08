@@ -25,8 +25,10 @@ def get_recommendations(title, n_recommendations=5, rec_type='general'):
 
     tfidf, similarity_matrix, movies_df = load_model_components()
     
-    if rec_type == 'actors':
-        return get_actor_recommendations(title, movies_df, n_recommendations)
+    # Handle actor based recommendations. Accept both 'actor' and 'actors'
+    # to remain backwards compatible with older API calls.
+    if rec_type in ('actor', 'actors'):
+        return get_actor_recommendations(title, n_recommendations)
     elif rec_type == 'genre':
         return get_genre_recommendations(title, n_recommendations)
     
@@ -62,7 +64,7 @@ def get_actor_recommendations(actor_name, n_recommendations=5):
         movies_with_actor = movies_df[movies_df['actors'].apply(lambda x: actor_name in x if isinstance(x, list) else False)]
         
         if movies_with_actor.empty:
-            return {'error': f'Actor "{actor_name}" not found in databa se'}
+            return {'error': f'Actor "{actor_name}" not found in database'}
         
         return {
             'actor': actor_name,
