@@ -1,9 +1,20 @@
 const express = require('express');
+require('dotenv').config();
 const cors = require('cors');
 const pool = require('./db');
 const { spawn } = require('child_process');
 const path = require('path');
 const { error } = require('console');
+const redis = require('redis');
+const swaggerUi = require('swagger-ui-express');
+const swaggerDocument = require('./swagger.json');
+
+// Set up redis client
+const redisClient = redis.createClient({
+    url: process.env.REDIS_URL || 'redis://redis:6379'
+});
+redisClient.on('error', (err) => console.error('Redis error', err));
+redisClient.connect();
 
 
 
@@ -14,14 +25,21 @@ const multer = require('multer');
 // Middleware
 app.use(cors());
 app.use(express.json());
+app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
 
 console.log("I am working");
 
 // Routes
 app.get('/api/movies', async (req, res) => {
     try {
+        const cacheKey = 'movies:all';
+        const cached = await redisClient.get(cacheKey);
+        if (cached) {
+            return res.json(JSON.parse(cached));
+        }
+
         const result = await pool.query(`
-            SELECT 
+            SELECT
                 movie.title,
                 movie.year,
                 movie.thumbnail,
@@ -74,7 +92,9 @@ app.get('/api/movies', async (req, res) => {
                 }
             });
         });
-        res.json(Object.values(movies));
+        const movieArray = Object.values(movies);
+        await redisClient.setEx(cacheKey, 3600, JSON.stringify(movieArray));
+        res.json(movieArray);
     } catch (err) {
         res.status(500).json({ error: err.message });
     }
@@ -85,6 +105,12 @@ app.get('/api/recommendations/:title', async (req, res) => {
     try {
         const { title } = req.params;
         const { limit = 7, type = 'general' } = req.query;
+
+        const cacheKey = `rec:${type}:${title}:${limit}`;
+        const cached = await redisClient.get(cacheKey);
+        if (cached) {
+            return res.json(JSON.parse(cached));
+        }
 
         const python = spawn('python', [
             path.join(__dirname, 'recommender_service', 'recommend.py'),
@@ -109,6 +135,7 @@ app.get('/api/recommendations/:title', async (req, res) => {
             }
             try {
                 const results = JSON.parse(recommendations);
+                redisClient.setEx(cacheKey, 3600, JSON.stringify(results));
                 res.json(results);
             } catch (error) {
                 res.status(500).json({ error: 'Failed to parse recommendations' });
@@ -124,6 +151,12 @@ app.get('/api/recommendations/actor/:name', async (req, res) => {
     try {
         const { name } = req.params;
         const { limit = 7 } = req.query;
+
+        const cacheKey = `rec:actor:${name}:${limit}`;
+        const cached = await redisClient.get(cacheKey);
+        if (cached) {
+            return res.json(JSON.parse(cached));
+        }
 
         const python = spawn('python', [
             path.join(__dirname, 'recommender_service', 'recommend.py'),  // Corrected path
@@ -148,6 +181,7 @@ app.get('/api/recommendations/actor/:name', async (req, res) => {
                 if (results.error) {
                     return res.status(404).json(results);
                 }
+                redisClient.setEx(cacheKey, 3600, JSON.stringify(results));
                 res.json(results);
             } catch (error) {
                 res.status(500).json({ error: 'Failed to parse recommendations' });
@@ -163,6 +197,12 @@ app.get('/api/recommendations/genre/:genre', async (req, res) => {
     try {
         const { genre } = req.params;
         const { limit = 7 } = req.query;
+
+        const cacheKey = `rec:genre:${genre}:${limit}`;
+        const cached = await redisClient.get(cacheKey);
+        if (cached) {
+            return res.json(JSON.parse(cached));
+        }
 
         const python = spawn('python', [
             path.join(__dirname, 'recommender_service', 'recommend.py'),
@@ -187,6 +227,7 @@ app.get('/api/recommendations/genre/:genre', async (req, res) => {
                 if (results.error) {
                     return res.status(404).json(results);
                 }
+                redisClient.setEx(cacheKey, 3600, JSON.stringify(results));
                 res.json(results);
             } catch (error) {
                 res.status(500).json({ error: 'Failed to parse genre recommendations' });
