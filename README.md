@@ -63,10 +63,33 @@ npm start
 ```
 npm install
 
-npm start 
+npm start
 
 ```
-- The application should be up and running now 
+- The application should be up and running now
+
+## Running with Docker
+
+1. Create a `.env` file in the repository root and provide database credentials:
+
+```env
+DB_USER=postgres
+DB_PASSWORD=postgres
+DB_NAME=movies
+```
+
+2. Build and start the containers:
+
+```bash
+docker-compose up --build
+```
+
+The frontend will be available on `http://localhost:3000` and the backend on `http://localhost:3001`.
+
+### API Documentation
+
+When the backend is running you can explore all endpoints via Swagger UI at
+`http://localhost:3001/api-docs`.
 
 #### Presenation Link 
 - https://www.youtube.com/watch?v=HmiNJXiQjm0
