@@ -1,0 +1,142 @@
+{
+  "openapi": "3.0.0",
+  "info": {
+    "title": "Movie Recommendation API",
+    "version": "1.0.0",
+    "description": "API documentation for the Movie Recommendation backend."
+  },
+  "servers": [
+    {"url": "http://localhost:3001"}
+  ],
+  "paths": {
+    "/api/movies": {
+      "get": {
+        "summary": "Get a list of movies",
+        "responses": {
+          "200": {"description": "Successful response"}
+        }
+      }
+    },
+    "/api/recommendations/{title}": {
+      "get": {
+        "summary": "Get recommendations by movie title",
+        "parameters": [
+          {"name": "title", "in": "path", "required": true, "schema": {"type": "string"}},
+          {"name": "limit", "in": "query", "schema": {"type": "integer"}},
+          {"name": "type", "in": "query", "schema": {"type": "string"}}
+        ],
+        "responses": {"200": {"description": "Recommendations"}}
+      }
+    },
+    "/api/recommendations/actor/{name}": {
+      "get": {
+        "summary": "Get recommendations by actor",
+        "parameters": [
+          {"name": "name", "in": "path", "required": true, "schema": {"type": "string"}},
+          {"name": "limit", "in": "query", "schema": {"type": "integer"}}
+        ],
+        "responses": {"200": {"description": "Recommendations"}}
+      }
+    },
+    "/api/recommendations/genre/{genre}": {
+      "get": {
+        "summary": "Get recommendations by genre",
+        "parameters": [
+          {"name": "genre", "in": "path", "required": true, "schema": {"type": "string"}},
+          {"name": "limit", "in": "query", "schema": {"type": "integer"}}
+        ],
+        "responses": {"200": {"description": "Recommendations"}}
+      }
+    },
+    "/api/auth/register": {
+      "post": {
+        "summary": "Register a new user",
+        "responses": {"200": {"description": "User registered"}}
+      }
+    },
+    "/api/auth/login": {
+      "post": {
+        "summary": "User login",
+        "responses": {"200": {"description": "Successful login"}}
+      }
+    },
+    "/api/users/{userId}": {
+      "get": {
+        "summary": "Get user information",
+        "parameters": [
+          {"name": "userId", "in": "path", "required": true, "schema": {"type": "string"}}
+        ],
+        "responses": {"200": {"description": "User info"}}
+      }
+    },
+    "/api/users/{username}/favorites": {
+      "get": {
+        "summary": "List favorite movies",
+        "parameters": [
+          {"name": "username", "in": "path", "required": true, "schema": {"type": "string"}}
+        ],
+        "responses": {"200": {"description": "Favorites"}}
+      },
+      "post": {
+        "summary": "Add a favorite movie",
+        "parameters": [
+          {"name": "username", "in": "path", "required": true, "schema": {"type": "string"}}
+        ],
+        "responses": {"200": {"description": "Movie added"}}
+      },
+      "delete": {
+        "summary": "Remove a favorite movie",
+        "parameters": [
+          {"name": "username", "in": "path", "required": true, "schema": {"type": "string"}}
+        ],
+        "responses": {"200": {"description": "Movie removed"}}
+      }
+    },
+    "/api/users/{userId}/avatar": {
+      "post": {
+        "summary": "Upload an avatar",
+        "parameters": [
+          {"name": "userId", "in": "path", "required": true, "schema": {"type": "string"}}
+        ],
+        "responses": {"200": {"description": "Avatar uploaded"}}
+      }
+    },
+    "/api/admin/analytics": {
+      "get": {
+        "summary": "Get analytics for admins",
+        "responses": {"200": {"description": "Analytics"}}
+      }
+    },
+    "/api/admin/users/{username}": {
+      "delete": {
+        "summary": "Delete a user",
+        "parameters": [
+          {"name": "username", "in": "path", "required": true, "schema": {"type": "string"}}
+        ],
+        "responses": {"200": {"description": "User deleted"}}
+      },
+      "put": {
+        "summary": "Update a user",
+        "parameters": [
+          {"name": "username", "in": "path", "required": true, "schema": {"type": "string"}}
+        ],
+        "responses": {"200": {"description": "User updated"}}
+      }
+    },
+    "/api/admin/movies/{title}": {
+      "put": {
+        "summary": "Update movie details",
+        "parameters": [
+          {"name": "title", "in": "path", "required": true, "schema": {"type": "string"}}
+        ],
+        "responses": {"200": {"description": "Movie updated"}}
+      }
+    },
+    "/api/admin/movies": {
+      "post": {
+        "summary": "Add a new movie",
+        "responses": {"201": {"description": "Movie created"}}
+      }
+    }
+  }
+}
